@@ -45,6 +45,14 @@ const Page = () => (
 		use:rv={{
 			w: "10rem",
 			h: "10rem",
+			$sm: {
+				w: "15rem",
+				h: "15rem",
+			},
+			$md: {
+				w: "20rem",
+				h: "20rem",
+			},
 			bg: rv.colors().background.default,
 			bc: rv.colors().border.default,
 			bw: "1px",

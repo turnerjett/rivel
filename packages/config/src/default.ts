@@ -1,4 +1,9 @@
-import type { CSSPropertyShorthands, Config, Values } from "@rivel/core";
+import type {
+	Breakpoints,
+	CSSPropertyShorthands,
+	Config,
+	Values,
+} from "@rivel/core";
 import { baseShorthands } from "./shorthands";
 import {
 	gray,
@@ -40,9 +45,10 @@ export const createConfigObject = <
 	PK extends string,
 	TK extends string,
 	V extends Values,
-	SH extends CSSPropertyShorthands | undefined
+	SH extends CSSPropertyShorthands | undefined,
+	BP extends Breakpoints | undefined
 >(
-	config: Config<SK, PK, TK, V, SH>
+	config: Config<SK, PK, TK, V, SH, BP>
 ) => {
 	return config;
 };
@@ -155,4 +161,11 @@ export const defaultConfig = createConfigObject({
 		},
 	}),
 	shorthands: baseShorthands,
+	breakpoints: {
+		xs: 520,
+		sm: 768,
+		md: 1024,
+		lg: 1280,
+		xl: 1640,
+	},
 });

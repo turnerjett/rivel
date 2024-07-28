@@ -23,17 +23,21 @@ export type Themes<TK extends string, PK extends string> = {
 
 export type Values = Record<string, unknown>;
 
+export type Breakpoints = Record<string, number>;
+
 export interface Config<
 	SK extends string,
 	PK extends string,
 	TK extends string,
 	V extends Values,
-	SH extends CSSPropertyShorthands | undefined
+	SH extends CSSPropertyShorthands | undefined,
+	BP extends Breakpoints | undefined
 > {
 	palettes: Palettes<SK, PK>;
 	themes: Themes<TK, NoInfer<PK>>;
 	values: (theme: { palette: string[] }) => V;
 	shorthands?: SH;
+	breakpoints?: BP;
 }
 
 export type GenericConfig = Config<
@@ -41,7 +45,8 @@ export type GenericConfig = Config<
 	string,
 	string,
 	Record<string, unknown>,
-	CSSPropertyShorthands
+	CSSPropertyShorthands,
+	Breakpoints
 >;
 
 // SK = Scheme Key
@@ -53,9 +58,10 @@ export const createConfig = <
 	PK extends string,
 	TK extends string,
 	V extends Values,
-	SH extends CSSPropertyShorthands | undefined
+	SH extends CSSPropertyShorthands | undefined,
+	BP extends Breakpoints | undefined
 >(
-	config: Config<SK, PK, TK, V, SH>
+	config: Config<SK, PK, TK, V, SH, BP>
 ) => {
 	const defaultTheme = Object.keys(config.themes)[0] as TK;
 	if (!defaultTheme) {
@@ -98,13 +104,22 @@ export const createConfig = <
 		}
 	);
 
+	if (config.breakpoints) {
+		const sorted = Object.entries(config.breakpoints).sort(
+			(a, b) => a[1] - b[1]
+		);
+		config.breakpoints = Object.fromEntries(sorted) as BP;
+	}
+
 	type MergedStyles = SH extends undefined
 		? Styles
 		: Styles & MapShorthands<SH>;
 
 	const rv = withStaticProperties(
-		(el: Element, styles: Accessor<MergedStyles>) =>
-			rvStylesWithConfig(el, styles, config),
+		(
+			el: Element,
+			styles: Accessor<MergedStyles & SpecialProperties<MergedStyles, BP>>
+		) => rvStylesWithConfig(el, styles, config),
 		{
 			...values,
 			Theme: themeProviderFromContext<typeof config>(ThemeContext),
@@ -114,9 +129,13 @@ export const createConfig = <
 	return { config, rv };
 };
 
-const rvStylesWithConfig = <C extends GenericConfig>(
+const rvStylesWithConfig = <
+	C extends GenericConfig,
+	S extends Styles,
+	BP extends Breakpoints
+>(
 	el: Element,
-	styles: Accessor<Styles>,
+	styles: Accessor<S & SpecialProperties<S, BP>>,
 	config: C
 ) => {
 	let prevClassNames: string[] = [];
@@ -124,11 +143,26 @@ const rvStylesWithConfig = <C extends GenericConfig>(
 		if (prevClassNames.length > 0) {
 			el.classList.remove(...prevClassNames);
 		}
-		const classNames = generateAtomicClassNames(styles(), config.shorthands);
+		const classNames = generateAtomicClassNames(styles(), config);
 		el.classList.add(...classNames);
 		prevClassNames = classNames;
 	});
 };
+
+type MapSpecialProperties<S extends Record<string, unknown>> = {
+	[K in keyof S as `$${string & K}`]?: S[K];
+};
+
+export type SpecialProperties<
+	S,
+	BP extends Breakpoints | undefined
+> = MapSpecialProperties<
+	{} & BP extends undefined
+		? {}
+		: {
+				[K in keyof BP]: S;
+		  }
+>;
 
 type GetSecondArg<T> = T extends (...args: infer P) => unknown ? P[1] : never;
 type GetAccessorType<T> = T extends (...args: unknown[]) => infer P ? P : never;
