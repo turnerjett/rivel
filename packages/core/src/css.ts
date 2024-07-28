@@ -7,24 +7,42 @@ const breakpointCache = new Set<string>();
 export const generateAtomicClassNames = <C extends GenericConfig>(
 	styles: Styles & SpecialProperties<Styles, Breakpoints>,
 	config: C,
-	breakpoint?: string
+	special?: {
+		breakpoint?: string;
+		selector?: string;
+	}
 ) => {
 	const atomicClassNames: string[] = Object.entries(styles).flatMap(
 		([key, value]) => {
 			if (key.startsWith("$")) {
 				const specialProperty = key.replace("$", "");
 				if (config.breakpoints && specialProperty in config.breakpoints) {
-					if (breakpoint)
+					if (special?.breakpoint)
 						throw new Error("Nested breakpoints are not supported");
-					return generateAtomicClassNames(value, config, specialProperty);
+					return generateAtomicClassNames(value, config, {
+						breakpoint: specialProperty,
+					});
+				}
+				if (specialProperty === "select") {
+					if (special?.selector)
+						throw new Error("Nested selectors are not supported");
+					return Object.entries(value).flatMap(([selector, styles]) => {
+						return generateAtomicClassNames(styles, config, {
+							selector: selector,
+						});
+					});
 				}
 			}
 			// Base styles
-			const hashedBreakpoint = breakpoint ? hashString(breakpoint, 2) : null;
+			const hashedSpecial = special?.breakpoint
+				? hashString(special.breakpoint, 2)
+				: special?.selector
+				? hashString(special.selector, 2)
+				: null;
 			const hashedKey = hashString(key, 4);
 			const hashedValue = hashString(value.toString(), 4);
-			const className = breakpoint
-				? `_${hashedBreakpoint}-${hashedKey}-${hashedValue}`
+			const className = hashedSpecial
+				? `_${hashedSpecial}-${hashedKey}-${hashedValue}`
 				: `_${hashedKey}-${hashedValue}`;
 			updateStyleSheet(
 				className,
@@ -32,7 +50,7 @@ export const generateAtomicClassNames = <C extends GenericConfig>(
 				value.toString(),
 				config.shorthands,
 				config,
-				breakpoint
+				special
 			);
 			return className;
 		}
@@ -46,7 +64,10 @@ const updateStyleSheet = (
 	styleValue: string,
 	shorthands: Record<string, unknown> | undefined,
 	config: GenericConfig,
-	breakpoint?: string
+	special?: {
+		breakpoint?: string;
+		selector?: string;
+	}
 ) => {
 	const realKey = handleShorthands(styleKey, shorthands);
 
@@ -64,20 +85,30 @@ const updateStyleSheet = (
 	const styleIndex = () => styleElement.sheet?.cssRules.length ?? 0;
 	styleCache.set(className, styleIndex());
 
-	if (breakpoint) {
+	if (special?.breakpoint) {
 		// biome-ignore lint/style/noNonNullAssertion: this is not null due to the check above
 		const breakpoints = Object.keys(config.breakpoints!).reverse();
-		const index = breakpoints.indexOf(breakpoint);
-		if (!breakpointCache.has(breakpoint)) {
-			breakpointCache.add(breakpoint);
+		const index = breakpoints.indexOf(special.breakpoint);
+		if (!breakpointCache.has(special.breakpoint)) {
+			breakpointCache.add(special.breakpoint);
 			styleElement.sheet?.insertRule(
-				`@media (max-width: ${config.breakpoints?.[breakpoint]}px) {}`,
+				`@media (max-width: ${config.breakpoints?.[special.breakpoint]}px) {}`,
 				index
 			);
 		}
 		const rule = styleElement.sheet?.cssRules[index] as CSSMediaRule;
 		const ruleIndex = rule?.cssRules.length ?? 0;
 		insertRule(rule, className, realKey, styleValue, ruleIndex, "html:root");
+		return;
+	}
+	if (special?.selector) {
+		insertRule(
+			styleElement,
+			`${className}${special.selector}`,
+			realKey,
+			styleValue,
+			styleIndex()
+		);
 		return;
 	}
 	insertRule(styleElement, className, realKey, styleValue, styleIndex());

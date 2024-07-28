@@ -58,6 +58,18 @@ const Page = () => (
 			bw: "1px",
 			bs: "solid",
 			col: rv.colors().textPrimary,
+			$select: {
+				":hover": {
+					bg: rv.colors().background.hover,
+				},
+				"::after": {
+					content: "''",
+					dis: "block",
+					w: "100%",
+					h: "10%",
+					bg: rv.colors().solid.default,
+				},
+			},
 		}}
 	>
 		<rv.Theme elevation={(surface) => surface + 2}>

@@ -8,6 +8,7 @@ import type { Styles, CSSPropertyShorthands, MapShorthands } from "./types";
 import { themeProviderFromContext } from "./theme";
 import { generateAtomicClassNames } from "./css";
 import { withElevation, withStaticProperties } from "./utils";
+import type { SimplePseudos } from "csstype";
 
 export type Palettes<SK extends string, PK extends string> = {
 	[key in SK]: {
@@ -157,11 +158,13 @@ export type SpecialProperties<
 	S,
 	BP extends Breakpoints | undefined
 > = MapSpecialProperties<
-	{} & BP extends undefined
-		? {}
+	{
+		select: Partial<Record<SimplePseudos, S>>;
+	} & (BP extends undefined
+		? never
 		: {
 				[K in keyof BP]: S;
-		  }
+		  })
 >;
 
 type GetSecondArg<T> = T extends (...args: infer P) => unknown ? P[1] : never;
