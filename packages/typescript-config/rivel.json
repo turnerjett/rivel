@@ -1,0 +1,10 @@
+{
+	"$schema": "https://json.schemastore.org/tsconfig",
+	"display": "RIVEL",
+	"extends": "./base.json",
+	"compilerOptions": {
+		"jsx": "preserve",
+		"jsxImportSource": "solid-js",
+		"types": ["vite/client", "@testing-library/jest-dom"]
+	}
+}
