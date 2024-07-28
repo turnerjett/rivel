@@ -1,11 +1,14 @@
 import type { Breakpoints, GenericConfig, SpecialProperties } from "./config";
 import type { Styles } from "./types";
 
+type StylesWithSpecialProperties = Styles &
+	SpecialProperties<Styles, Breakpoints>;
+
 const styleCache = new Map<string, number>();
 const breakpointCache = new Set<string>();
 
 export const generateAtomicClassNames = <C extends GenericConfig>(
-	styles: Styles & SpecialProperties<Styles, Breakpoints>,
+	styles: StylesWithSpecialProperties,
 	config: C,
 	special?: {
 		breakpoint?: string;
@@ -27,9 +30,13 @@ export const generateAtomicClassNames = <C extends GenericConfig>(
 					if (special?.selector)
 						throw new Error("Nested selectors are not supported");
 					return Object.entries(value).flatMap(([selector, styles]) => {
-						return generateAtomicClassNames(styles, config, {
-							selector: selector,
-						});
+						return generateAtomicClassNames(
+							styles as StylesWithSpecialProperties,
+							config,
+							{
+								selector: selector,
+							}
+						);
 					});
 				}
 			}
@@ -58,6 +65,23 @@ export const generateAtomicClassNames = <C extends GenericConfig>(
 	return atomicClassNames;
 };
 
+export const generateStyleSheets = (config: GenericConfig) => {
+	const styleElement = document.createElement("style");
+	styleElement.setAttribute("data-rivel", "");
+	document.head.appendChild(styleElement);
+	if (!config.breakpoints) return;
+	const breakpointsStyleElement = document.createElement("style");
+
+	breakpointsStyleElement.setAttribute("data-rivel-breakpoints", "");
+	document.head.appendChild(breakpointsStyleElement);
+	const breakpoints = Object.keys(config.breakpoints);
+	for (const breakpoint of breakpoints) {
+		breakpointsStyleElement.sheet?.insertRule(
+			`@media (max-width: ${config.breakpoints?.[breakpoint]}px) {}`
+		);
+	}
+};
+
 const updateStyleSheet = (
 	className: string,
 	styleKey: string,
@@ -73,30 +97,21 @@ const updateStyleSheet = (
 
 	if (styleCache.has(className)) return;
 
-	let styleElement = document.querySelector(
+	const styleElement = document.querySelector(
 		"style[data-rivel]"
 	) as HTMLStyleElement;
-	if (!styleElement) {
-		styleElement = document.createElement("style");
-		styleElement.setAttribute("data-rivel", "");
-		document.head.appendChild(styleElement);
-	}
 
 	const styleIndex = () => styleElement.sheet?.cssRules.length ?? 0;
 	styleCache.set(className, styleIndex());
 
 	if (special?.breakpoint) {
+		const breakpointStyleElement = document.querySelector(
+			"style[data-rivel-breakpoints]"
+		) as HTMLStyleElement;
 		// biome-ignore lint/style/noNonNullAssertion: this is not null due to the check above
 		const breakpoints = Object.keys(config.breakpoints!).reverse();
 		const index = breakpoints.indexOf(special.breakpoint);
-		if (!breakpointCache.has(special.breakpoint)) {
-			breakpointCache.add(special.breakpoint);
-			styleElement.sheet?.insertRule(
-				`@media (max-width: ${config.breakpoints?.[special.breakpoint]}px) {}`,
-				index
-			);
-		}
-		const rule = styleElement.sheet?.cssRules[index] as CSSMediaRule;
+		const rule = breakpointStyleElement.sheet?.cssRules[index] as CSSMediaRule;
 		const ruleIndex = rule?.cssRules.length ?? 0;
 		insertRule(rule, className, realKey, styleValue, ruleIndex, "html:root");
 		return;

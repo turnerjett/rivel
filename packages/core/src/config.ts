@@ -6,7 +6,7 @@ import {
 } from "solid-js";
 import type { Styles, CSSPropertyShorthands, MapShorthands } from "./types";
 import { themeProviderFromContext } from "./theme";
-import { generateAtomicClassNames } from "./css";
+import { generateAtomicClassNames, generateStyleSheets } from "./css";
 import { withElevation, withStaticProperties } from "./utils";
 import type { SimplePseudos } from "csstype";
 
@@ -110,6 +110,9 @@ export const createConfig = <
 			(a, b) => a[1] - b[1]
 		);
 		config.breakpoints = Object.fromEntries(sorted) as BP;
+	}
+	if (typeof window !== "undefined") {
+		generateStyleSheets(config);
 	}
 
 	type MergedStyles = SH extends undefined

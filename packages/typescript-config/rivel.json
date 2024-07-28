@@ -4,7 +4,6 @@
 	"extends": "./base.json",
 	"compilerOptions": {
 		"jsx": "preserve",
-		"jsxImportSource": "solid-js",
-		"types": ["vite/client", "@testing-library/jest-dom"]
+		"jsxImportSource": "solid-js"
 	}
 }

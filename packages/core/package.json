@@ -7,6 +7,7 @@
 		"test": "vitest"
 	},
 	"devDependencies": {
+		"@rivel/config": "*",
 		"@rivel/typescript-config": "*",
 		"@solidjs/testing-library": "^0.8.9",
 		"@testing-library/jest-dom": "^6.4.8",
