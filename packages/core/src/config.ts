@@ -6,7 +6,11 @@ import {
 } from "solid-js";
 import type { Styles, CSSPropertyShorthands, MapShorthands } from "./types";
 import { themeProviderFromContext } from "./theme";
-import { generateAtomicClassNames, generateStyleSheets } from "./css";
+import {
+	generateAtomicClassNames,
+	generateStyleSheets,
+	removeClasses,
+} from "./css";
 import { withElevation, withStaticProperties } from "./utils";
 import type { SimplePseudos } from "csstype";
 
@@ -159,11 +163,16 @@ const rvStylesWithConfig = <
 ) => {
 	let prevClassNames: string[] = [];
 	createRenderEffect(() => {
-		const classNames = generateAtomicClassNames(styles(), config);
+		const classNames = generateAtomicClassNames(
+			styles(),
+			prevClassNames,
+			config
+		);
 		if (prevClassNames.length > 0) {
 			const removed = prevClassNames.filter(
 				(className) => !classNames.includes(className)
 			);
+			removeClasses(removed);
 			el.classList.remove(...removed);
 		}
 		el.classList.add(...classNames);

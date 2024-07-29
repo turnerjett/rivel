@@ -25,6 +25,7 @@ export default function App() {
 					jc: "center",
 					ai: "center",
 					gap: "1rem",
+					col: rv.colors().textPrimary,
 				}}
 			>
 				<rv.Theme name={theme()} scheme={scheme()} elevation={elevation()}>
@@ -93,6 +94,7 @@ const Page = () => (
 					col: rv.colors().textPrimary,
 					bg: rv.colors().background.default,
 					ta: "center",
+					p: "1rem",
 				}}
 			>
 				Test

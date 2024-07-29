@@ -5,10 +5,18 @@ import { toKebabCase } from "./utils";
 type StylesWithSpecialProperties = Styles &
 	SpecialProperties<Styles, Breakpoints>;
 
-const styleCache = new Map<string, number>();
+export const styleCache = new Map<
+	string,
+	{
+		rule: CSSRule;
+		references: number;
+		breakpoint?: string;
+	}
+>();
 
 export const generateAtomicClassNames = (
 	styles: StylesWithSpecialProperties,
+	exclude: string[],
 	config: GenericConfig,
 	special?: {
 		breakpoint?: string;
@@ -22,7 +30,7 @@ export const generateAtomicClassNames = (
 				if (config.breakpoints && specialProperty in config.breakpoints) {
 					if (special?.breakpoint)
 						throw new Error("Nested breakpoints are not supported");
-					return generateAtomicClassNames(value, config, {
+					return generateAtomicClassNames(value, exclude, config, {
 						...special,
 						breakpoint: specialProperty,
 					});
@@ -34,6 +42,7 @@ export const generateAtomicClassNames = (
 					return Object.entries(value).flatMap(([selector, styles]) => {
 						return generateAtomicClassNames(
 							styles as StylesWithSpecialProperties,
+							exclude,
 							config,
 							{
 								...special,
@@ -45,6 +54,7 @@ export const generateAtomicClassNames = (
 			}
 
 			const className = buildClassName(key, value, special);
+			if (exclude.includes(className)) return className;
 
 			updateStyleSheet(className, key, value, config, special);
 			return className;
@@ -94,13 +104,17 @@ const updateStyleSheet = (
 ) => {
 	const realKey = handleShorthands(styleKey, config.shorthands);
 
-	if (styleCache.has(className)) return;
+	if (styleCache.has(className)) {
+		const cached = styleCache.get(className);
+		if (cached) {
+			cached.references++;
+		}
+		return;
+	}
 
 	const styleElement = document.querySelector(
 		"style[data-rivel]"
 	) as HTMLStyleElement;
-
-	const styleIndex = () => styleElement.sheet?.cssRules.length ?? 0;
 
 	if (special?.breakpoint) {
 		const breakpointStyleElement = document.querySelector(
@@ -110,43 +124,50 @@ const updateStyleSheet = (
 		const breakpoints = Object.keys(config.breakpoints!).reverse();
 		const index = breakpoints.indexOf(special.breakpoint);
 		const rule = breakpointStyleElement.sheet?.cssRules[index] as CSSMediaRule;
-		const ruleIndex = rule?.cssRules.length ?? 0;
+		let ruleToInsert: CSSRule;
 		if (special.selector) {
-			insertRule(
+			ruleToInsert = insertRule(
 				rule,
 				`${className}${special.selector}`,
 				realKey,
 				styleValue,
-				ruleIndex,
 				config
 			);
 		} else {
-			insertRule(rule, className, realKey, styleValue, ruleIndex, config);
+			ruleToInsert = insertRule(rule, className, realKey, styleValue, config);
 		}
-		styleCache.set(className, ruleIndex);
+		styleCache.set(className, {
+			rule: ruleToInsert,
+			references: 1,
+			breakpoint: special.breakpoint,
+		});
 		return;
 	}
 	if (special?.selector) {
-		insertRule(
+		const ruleToInsert = insertRule(
 			styleElement,
 			`${className}${special.selector}`,
 			realKey,
 			styleValue,
-			styleIndex(),
 			config
 		);
-		styleCache.set(className, styleIndex());
+		styleCache.set(className, {
+			rule: ruleToInsert,
+			references: 1,
+		});
 		return;
 	}
-	insertRule(
+	const ruleToInsert = insertRule(
 		styleElement,
 		className,
 		realKey,
 		styleValue,
-		styleIndex(),
 		config
 	);
-	styleCache.set(className, styleIndex());
+	styleCache.set(className, {
+		rule: ruleToInsert,
+		references: 1,
+	});
 };
 
 const insertRule = (
@@ -154,9 +175,8 @@ const insertRule = (
 	className: string,
 	styleKey: string | string[],
 	styleValue: string | number,
-	index: number,
 	config: GenericConfig
-) => {
+): CSSRule => {
 	const el = element instanceof HTMLStyleElement ? element.sheet : element;
 	const value =
 		typeof styleValue === "number"
@@ -166,18 +186,46 @@ const insertRule = (
 			: styleValue;
 	if (!el)
 		throw new Error("Element is not a valid HTMLStyleElement or CSSMediaRule");
-	if (typeof styleKey === "string") {
-		el.insertRule(
-			`:root .${className} { ${toKebabCase(styleKey)}: ${value}; }`,
-			index
-		);
-	} else {
-		for (const key of styleKey) {
-			el.insertRule(
-				`:root .${className} { ${toKebabCase(key)}: ${value}; }`,
-				index
+	let ruleString: string;
+	if (typeof styleKey === "string")
+		ruleString = `${toKebabCase(styleKey)}: ${value};`;
+	else
+		ruleString = styleKey
+			.map((key) => `${toKebabCase(key)}: ${value};`)
+			.join(" ");
+	el.insertRule(`:root .${className} { ${ruleString} }`);
+	// biome-ignore lint/style/noNonNullAssertion: this is not null due to the insertRule above
+	return el.cssRules[0]!;
+};
+
+export const removeClasses = (classes: string[]) => {
+	const styleElement = document.querySelector(
+		"style[data-rivel]"
+	) as HTMLStyleElement;
+
+	for (const className of classes) {
+		const cached = styleCache.get(className);
+		if (!cached)
+			throw new Error(
+				`Class ${className} should not exist without being present in the cache`
 			);
+		cached.references--;
+		if (cached.references !== 0) continue;
+		if (cached.breakpoint) {
+			const breakpointRule = cached.rule.parentRule as CSSMediaRule;
+			if (!breakpointRule) throw new Error(`Rule for ${className} not found`);
+			const ruleIndex = Array.from(breakpointRule.cssRules).indexOf(
+				cached.rule as CSSRule
+			);
+			breakpointRule.deleteRule(ruleIndex);
+			styleCache.delete(className);
+			continue;
 		}
+		const ruleIndex = Array.from(styleElement.sheet?.cssRules || []).indexOf(
+			cached.rule as CSSRule
+		);
+		styleElement.sheet?.deleteRule(ruleIndex);
+		styleCache.delete(className);
 	}
 };
 
