@@ -1,9 +1,10 @@
 import { test, expect, beforeEach } from "vitest";
 import { render } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
-import { type RVDirective, createConfig } from "./config";
+import { createConfig } from "./config";
 import { defaultConfig } from "@rivel/config";
 import { styleCache } from "./css";
+import type { RVDirective } from "./types";
 
 const { rv, config } = createConfig(defaultConfig);
 

@@ -1,5 +1,5 @@
-import type { Breakpoints, GenericConfig, SpecialProperties } from "./config";
-import type { StyleKeys, Styles } from "./types";
+import type { Breakpoints, GenericConfig } from "./config";
+import type { StyleKeys, Styles, SpecialProperties } from "./types";
 import { toKebabCase } from "./utils";
 
 type StylesWithSpecialProperties = Styles &

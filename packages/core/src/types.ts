@@ -37,3 +37,29 @@ export type MapShorthands<T> = {
 		? CSSProperties[T[K][number]]
 		: never;
 };
+
+type SimplePseudoClasses = Exclude<CSS.SimplePseudos, `::${string}`>;
+
+export type BaseSpecialProperties<S> = MapSpecialProperties<{
+	select: Partial<Record<CSS.SimplePseudos, S>>;
+	parentSelect: Partial<Record<SimplePseudoClasses, S>>;
+	ancestorSelect: Partial<Record<SimplePseudoClasses, S>>;
+}>;
+
+export type MapSpecialProperties<S extends Record<string, unknown>> = {
+	[K in keyof S as `$${string & K}`]?: S[K];
+};
+
+type GetSecondArg<T> = T extends (...args: infer P) => unknown ? P[1] : never;
+type GetAccessorType<T> = T extends (...args: unknown[]) => infer P ? P : never;
+export type RVDirective<RV> = GetAccessorType<GetSecondArg<RV>>;
+
+export type SpecialProperties<
+	S,
+	BP extends Record<string, unknown> | undefined
+> = BaseSpecialProperties<S> &
+	(BP extends undefined
+		? never
+		: MapSpecialProperties<{
+				[key in keyof BP]: S & BaseSpecialProperties<S>;
+		  }>);

@@ -4,7 +4,12 @@ import {
 	createRenderEffect,
 	useContext,
 } from "solid-js";
-import type { Styles, CSSPropertyShorthands, MapShorthands } from "./types";
+import type {
+	Styles,
+	CSSPropertyShorthands,
+	MapShorthands,
+	SpecialProperties,
+} from "./types";
 import { themeProviderFromContext } from "./theme";
 import {
 	generateAtomicClassNames,
@@ -12,7 +17,6 @@ import {
 	removeClasses,
 } from "./css";
 import { withElevation, withStaticProperties } from "./utils";
-import type { SimplePseudos } from "csstype";
 
 export type Palettes<SK extends string, PK extends string> = {
 	[key in SK]: {
@@ -142,7 +146,8 @@ export const createConfig = <
 		(
 			el: Element,
 			styles: Accessor<MergedStyles & SpecialProperties<MergedStyles, BP>>
-		) => rvStylesWithConfig(el, styles, config),
+		) =>
+			rvStylesWithConfig<typeof config, MergedStyles, BP>(el, styles, config),
 		{
 			...values,
 			Theme: themeProviderFromContext<typeof config>(ThemeContext),
@@ -155,7 +160,7 @@ export const createConfig = <
 const rvStylesWithConfig = <
 	C extends GenericConfig,
 	S extends Styles,
-	BP extends Breakpoints
+	BP extends Breakpoints | undefined
 >(
 	el: Element,
 	styles: Accessor<S & SpecialProperties<S, BP>>,
@@ -179,29 +184,3 @@ const rvStylesWithConfig = <
 		prevClassNames = classNames;
 	});
 };
-
-export type SpecialProperties<
-	S,
-	BP extends Breakpoints | undefined
-> = BaseSpecialProperties<S> &
-	(BP extends undefined
-		? never
-		: MapSpecialProperties<{
-				[key in keyof BP]: S & BaseSpecialProperties<S>;
-		  }>);
-
-type SimplePseudoClasses = Exclude<SimplePseudos, `::${string}`>;
-
-type BaseSpecialProperties<S> = MapSpecialProperties<{
-	select: Partial<Record<SimplePseudos, S>>;
-	parentSelect: Partial<Record<SimplePseudoClasses, S>>;
-	ancestorSelect: Partial<Record<SimplePseudoClasses, S>>;
-}>;
-
-type MapSpecialProperties<S extends Record<string, unknown>> = {
-	[K in keyof S as `$${string & K}`]?: S[K];
-};
-
-type GetSecondArg<T> = T extends (...args: infer P) => unknown ? P[1] : never;
-type GetAccessorType<T> = T extends (...args: unknown[]) => infer P ? P : never;
-export type RVDirective<RV> = GetAccessorType<GetSecondArg<RV>>;
