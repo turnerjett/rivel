@@ -113,7 +113,7 @@ test("set selector", () => {
 	const { container } = render(() => (
 		<div use:rv={{ bg: "red", $select: { ":hover": { bg: "blue" } } }} />
 	));
-	expect(container.firstChild).toHaveClass("_bg-red", "_hover-bg-blue");
+	expect(container.firstChild).toHaveClass("_bg-red", "_self-hover-bg-blue");
 });
 
 test("set selector inside breakpoint", () => {
@@ -122,5 +122,5 @@ test("set selector inside breakpoint", () => {
 			use:rv={{ bg: "red", $sm: { $select: { ":hover": { bg: "blue" } } } }}
 		/>
 	));
-	expect(container.firstChild).toHaveClass("_bg-red", "_sm-hover-bg-blue");
+	expect(container.firstChild).toHaveClass("_bg-red", "_sm-self-hover-bg-blue");
 });

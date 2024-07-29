@@ -190,8 +190,12 @@ export type SpecialProperties<
 				[key in keyof BP]: S & BaseSpecialProperties<S>;
 		  }>);
 
+type SimplePseudoClasses = Exclude<SimplePseudos, `::${string}`>;
+
 type BaseSpecialProperties<S> = MapSpecialProperties<{
 	select: Partial<Record<SimplePseudos, S>>;
+	parentSelect: Partial<Record<SimplePseudoClasses, S>>;
+	ancestorSelect: Partial<Record<SimplePseudoClasses, S>>;
 }>;
 
 type MapSpecialProperties<S extends Record<string, unknown>> = {

@@ -5,6 +5,15 @@ import { toKebabCase } from "./utils";
 type StylesWithSpecialProperties = Styles &
 	SpecialProperties<Styles, Breakpoints>;
 
+interface SpecialArgs {
+	breakpoint?: string;
+	selector?: {
+		self?: string;
+		parent?: string;
+		ancestor?: string;
+	};
+}
+
 export const styleCache = new Map<
 	string,
 	{
@@ -18,10 +27,7 @@ export const generateAtomicClassNames = (
 	styles: StylesWithSpecialProperties,
 	exclude: string[],
 	config: GenericConfig,
-	special?: {
-		breakpoint?: string;
-		selector?: string;
-	}
+	special?: SpecialArgs
 ) => {
 	const atomicClassNames: string[] = Object.entries(styles).flatMap(
 		([key, value]) => {
@@ -36,17 +42,24 @@ export const generateAtomicClassNames = (
 					});
 				}
 
-				if (specialProperty === "select") {
+				if (specialProperty.toLowerCase().endsWith("select")) {
 					if (special?.selector)
 						throw new Error("Nested selectors are not supported");
+					let selectorType = specialProperty
+						.toLowerCase()
+						.replace("select", "");
+					selectorType = selectorType ? selectorType : "self";
 					return Object.entries(value).flatMap(([selector, styles]) => {
+						const selectorObj = {
+							[selectorType]: selector,
+						};
 						return generateAtomicClassNames(
 							styles as StylesWithSpecialProperties,
 							exclude,
 							config,
 							{
 								...special,
-								selector: selector,
+								selector: selectorObj,
 							}
 						);
 					});
@@ -66,28 +79,41 @@ export const generateAtomicClassNames = (
 const buildClassName = (
 	key: string,
 	value: string | number,
-	special?: {
-		breakpoint?: string;
-		selector?: string;
-	}
+	special?: SpecialArgs
 ) => {
 	const hashedBreakpoint = special?.breakpoint
 		? hashString(special.breakpoint, 2)
 		: null;
 	const hashedSelector = special?.selector
-		? hashString(special.selector, 2)
+		? hashString(
+				special.selector.self ||
+					special.selector.parent ||
+					special.selector.ancestor ||
+					// At least one should be present
+					"",
+				2
+		  )
 		: null;
 	const hashedKey = hashString(key, 4);
 	const hashedValue = hashString(value.toString(), 4);
 
+	const selectorType = special?.selector?.parent
+		? "parent"
+		: special?.selector?.ancestor
+		? "ancestor"
+		: "self";
+	const updatedSelectorHash = hashString(
+		`${selectorType}-${hashedSelector}`,
+		4
+	);
 	if (hashedBreakpoint && hashedSelector) {
-		return `_${hashedBreakpoint}-${hashedSelector}-${hashedKey}-${hashedValue}`;
+		return `_${hashedBreakpoint}-${updatedSelectorHash}-${hashedKey}-${hashedValue}`;
 	}
 	if (hashedBreakpoint) {
 		return `_${hashedBreakpoint}-${hashedKey}-${hashedValue}`;
 	}
 	if (hashedSelector) {
-		return `_${hashedSelector}-${hashedKey}-${hashedValue}`;
+		return `_${updatedSelectorHash}-${hashedKey}-${hashedValue}`;
 	}
 	return `_${hashedKey}-${hashedValue}`;
 };
@@ -97,10 +123,7 @@ const updateStyleSheet = (
 	styleKey: string,
 	styleValue: string | number,
 	config: GenericConfig,
-	special?: {
-		breakpoint?: string;
-		selector?: string;
-	}
+	special?: SpecialArgs
 ) => {
 	const realKey = handleShorthands(styleKey, config.shorthands);
 
@@ -126,15 +149,39 @@ const updateStyleSheet = (
 		const rule = breakpointStyleElement.sheet?.cssRules[index] as CSSMediaRule;
 		let ruleToInsert: CSSRule;
 		if (special.selector) {
+			if (special.selector.self) {
+				ruleToInsert = insertRule(
+					rule,
+					`.${className}${special.selector.self}`,
+					realKey,
+					styleValue,
+					config
+				);
+			} else if (special.selector.parent) {
+				ruleToInsert = insertRule(
+					rule,
+					`${special.selector.parent} > .${className}`,
+					realKey,
+					styleValue,
+					config
+				);
+			} else if (special.selector.ancestor) {
+				ruleToInsert = insertRule(
+					rule,
+					`${special.selector.ancestor} .${className}`,
+					realKey,
+					styleValue,
+					config
+				);
+			} else throw new Error("Invalid selector object");
+		} else {
 			ruleToInsert = insertRule(
 				rule,
-				`${className}${special.selector}`,
+				`.${className}`,
 				realKey,
 				styleValue,
 				config
 			);
-		} else {
-			ruleToInsert = insertRule(rule, className, realKey, styleValue, config);
 		}
 		styleCache.set(className, {
 			rule: ruleToInsert,
@@ -144,13 +191,32 @@ const updateStyleSheet = (
 		return;
 	}
 	if (special?.selector) {
-		const ruleToInsert = insertRule(
-			styleElement,
-			`${className}${special.selector}`,
-			realKey,
-			styleValue,
-			config
-		);
+		let ruleToInsert: CSSRule;
+		if (special.selector.self) {
+			ruleToInsert = insertRule(
+				styleElement,
+				`.${className}${special.selector.self}`,
+				realKey,
+				styleValue,
+				config
+			);
+		} else if (special.selector.parent) {
+			ruleToInsert = insertRule(
+				styleElement,
+				`${special.selector.parent} > .${className}`,
+				realKey,
+				styleValue,
+				config
+			);
+		} else if (special.selector.ancestor) {
+			ruleToInsert = insertRule(
+				styleElement,
+				`${special.selector.ancestor} .${className}`,
+				realKey,
+				styleValue,
+				config
+			);
+		} else throw new Error("Invalid selector object");
 		styleCache.set(className, {
 			rule: ruleToInsert,
 			references: 1,
@@ -159,7 +225,7 @@ const updateStyleSheet = (
 	}
 	const ruleToInsert = insertRule(
 		styleElement,
-		className,
+		`.${className}`,
 		realKey,
 		styleValue,
 		config
@@ -193,7 +259,7 @@ const insertRule = (
 		ruleString = styleKey
 			.map((key) => `${toKebabCase(key)}: ${value};`)
 			.join(" ");
-	el.insertRule(`:root .${className} { ${ruleString} }`);
+	el.insertRule(`:root ${className} { ${ruleString} }`);
 	// biome-ignore lint/style/noNonNullAssertion: this is not null due to the insertRule above
 	return el.cssRules[0]!;
 };

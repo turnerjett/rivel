@@ -95,6 +95,11 @@ const Page = () => (
 					bg: rv.colors().background.default,
 					ta: "center",
 					p: "1rem",
+					$parentSelect: {
+						":hover": {
+							bg: rv.colors().background.hover,
+						},
+					},
 				}}
 			>
 				Test
