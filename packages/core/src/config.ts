@@ -153,22 +153,23 @@ const rvStylesWithConfig = <
 	});
 };
 
-type MapSpecialProperties<S extends Record<string, unknown>> = {
-	[K in keyof S as `$${string & K}`]?: S[K];
-};
-
 export type SpecialProperties<
 	S,
 	BP extends Breakpoints | undefined
-> = MapSpecialProperties<
-	{
-		select: Partial<Record<SimplePseudos, S>>;
-	} & (BP extends undefined
+> = BaseSpecialProperties<S> &
+	(BP extends undefined
 		? never
-		: {
-				[K in keyof BP]: S;
-		  })
->;
+		: MapSpecialProperties<{
+				[key in keyof BP]: S & BaseSpecialProperties<S>;
+		  }>);
+
+type BaseSpecialProperties<S> = MapSpecialProperties<{
+	select: Partial<Record<SimplePseudos, S>>;
+}>;
+
+type MapSpecialProperties<S extends Record<string, unknown>> = {
+	[K in keyof S as `$${string & K}`]?: S[K];
+};
 
 type GetSecondArg<T> = T extends (...args: infer P) => unknown ? P[1] : never;
 type GetAccessorType<T> = T extends (...args: unknown[]) => infer P ? P : never;

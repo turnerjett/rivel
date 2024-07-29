@@ -5,7 +5,6 @@ type StylesWithSpecialProperties = Styles &
 	SpecialProperties<Styles, Breakpoints>;
 
 const styleCache = new Map<string, number>();
-const breakpointCache = new Set<string>();
 
 export const generateAtomicClassNames = <C extends GenericConfig>(
 	styles: StylesWithSpecialProperties,
@@ -23,6 +22,7 @@ export const generateAtomicClassNames = <C extends GenericConfig>(
 					if (special?.breakpoint)
 						throw new Error("Nested breakpoints are not supported");
 					return generateAtomicClassNames(value, config, {
+						...special,
 						breakpoint: specialProperty,
 					});
 				}
@@ -34,23 +34,35 @@ export const generateAtomicClassNames = <C extends GenericConfig>(
 							styles as StylesWithSpecialProperties,
 							config,
 							{
+								...special,
 								selector: selector,
 							}
 						);
 					});
 				}
 			}
+
 			// Base styles
-			const hashedSpecial = special?.breakpoint
+			const hashedBreakpoint = special?.breakpoint
 				? hashString(special.breakpoint, 2)
-				: special?.selector
+				: null;
+			const hashedSelector = special?.selector
 				? hashString(special.selector, 2)
 				: null;
 			const hashedKey = hashString(key, 4);
 			const hashedValue = hashString(value.toString(), 4);
-			const className = hashedSpecial
-				? `_${hashedSpecial}-${hashedKey}-${hashedValue}`
-				: `_${hashedKey}-${hashedValue}`;
+			let className: string;
+
+			if (hashedBreakpoint && hashedSelector) {
+				className = `_${hashedBreakpoint}-${hashedSelector}-${hashedKey}-${hashedValue}`;
+			} else if (hashedBreakpoint) {
+				className = `_${hashedBreakpoint}-${hashedKey}-${hashedValue}`;
+			} else if (hashedSelector) {
+				className = `_${hashedSelector}-${hashedKey}-${hashedValue}`;
+			} else {
+				className = `_${hashedKey}-${hashedValue}`;
+			}
+
 			updateStyleSheet(
 				className,
 				key,
@@ -65,13 +77,14 @@ export const generateAtomicClassNames = <C extends GenericConfig>(
 	return atomicClassNames;
 };
 
-export const generateStyleSheets = (config: GenericConfig) => {
+export const generateStyleSheets = <C extends GenericConfig>(config: C) => {
 	const styleElement = document.createElement("style");
 	styleElement.setAttribute("data-rivel", "");
 	document.head.appendChild(styleElement);
 	if (!config.breakpoints) return;
 	const breakpointsStyleElement = document.createElement("style");
 
+	if (!config.breakpoints) return;
 	breakpointsStyleElement.setAttribute("data-rivel-breakpoints", "");
 	document.head.appendChild(breakpointsStyleElement);
 	const breakpoints = Object.keys(config.breakpoints);
@@ -102,7 +115,6 @@ const updateStyleSheet = (
 	) as HTMLStyleElement;
 
 	const styleIndex = () => styleElement.sheet?.cssRules.length ?? 0;
-	styleCache.set(className, styleIndex());
 
 	if (special?.breakpoint) {
 		const breakpointStyleElement = document.querySelector(
@@ -113,7 +125,19 @@ const updateStyleSheet = (
 		const index = breakpoints.indexOf(special.breakpoint);
 		const rule = breakpointStyleElement.sheet?.cssRules[index] as CSSMediaRule;
 		const ruleIndex = rule?.cssRules.length ?? 0;
-		insertRule(rule, className, realKey, styleValue, ruleIndex, "html:root");
+		if (special.selector) {
+			insertRule(
+				rule,
+				`${className}${special.selector}`,
+				realKey,
+				styleValue,
+				ruleIndex,
+				"html:root"
+			);
+		} else {
+			insertRule(rule, className, realKey, styleValue, ruleIndex, "html:root");
+		}
+		styleCache.set(className, ruleIndex);
 		return;
 	}
 	if (special?.selector) {
@@ -124,9 +148,11 @@ const updateStyleSheet = (
 			styleValue,
 			styleIndex()
 		);
+		styleCache.set(className, styleIndex());
 		return;
 	}
 	insertRule(styleElement, className, realKey, styleValue, styleIndex());
+	styleCache.set(className, styleIndex());
 };
 
 const insertRule = (

@@ -3,9 +3,13 @@ import { createSignal } from "solid-js";
 
 export default function App() {
 	const [theme, setTheme] = createSignal<"blue" | "base">("blue");
+	const [scheme, setScheme] = createSignal<"dark" | "light">("dark");
 	const [elevation, setElevation] = createSignal(0);
 	const toggleTheme = () => {
 		setTheme(theme() === "blue" ? "base" : "blue");
+	};
+	const toggleScheme = () => {
+		setScheme(scheme() === "dark" ? "light" : "dark");
 	};
 	const raise = () => setElevation(elevation() + 1);
 	const lower = () => setElevation(elevation() - 1);
@@ -23,9 +27,12 @@ export default function App() {
 					gap: "1rem",
 				}}
 			>
-				<rv.Theme name={theme()} scheme="dark" elevation={elevation()}>
+				<rv.Theme name={theme()} scheme={scheme()} elevation={elevation()}>
 					<Page />
 				</rv.Theme>
+				<button type="button" onClick={toggleScheme}>
+					Toggle scheme
+				</button>
 				<button type="button" onClick={toggleTheme}>
 					Toggle theme
 				</button>
@@ -52,6 +59,11 @@ const Page = () => (
 			$md: {
 				w: "20rem",
 				h: "20rem",
+				$select: {
+					":hover": {
+						bg: rv.colors().solid.default,
+					},
+				},
 			},
 			bg: rv.colors().background.default,
 			bc: rv.colors().border.default,
