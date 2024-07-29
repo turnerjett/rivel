@@ -159,10 +159,13 @@ const rvStylesWithConfig = <
 ) => {
 	let prevClassNames: string[] = [];
 	createRenderEffect(() => {
-		if (prevClassNames.length > 0) {
-			el.classList.remove(...prevClassNames);
-		}
 		const classNames = generateAtomicClassNames(styles(), config);
+		if (prevClassNames.length > 0) {
+			const removed = prevClassNames.filter(
+				(className) => !classNames.includes(className)
+			);
+			el.classList.remove(...removed);
+		}
 		el.classList.add(...classNames);
 		prevClassNames = classNames;
 	});

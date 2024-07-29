@@ -7,9 +7,9 @@ type StylesWithSpecialProperties = Styles &
 
 const styleCache = new Map<string, number>();
 
-export const generateAtomicClassNames = <C extends GenericConfig>(
+export const generateAtomicClassNames = (
 	styles: StylesWithSpecialProperties,
-	config: C,
+	config: GenericConfig,
 	special?: {
 		breakpoint?: string;
 		selector?: string;
@@ -27,6 +27,7 @@ export const generateAtomicClassNames = <C extends GenericConfig>(
 						breakpoint: specialProperty,
 					});
 				}
+
 				if (specialProperty === "select") {
 					if (special?.selector)
 						throw new Error("Nested selectors are not supported");
@@ -43,71 +44,55 @@ export const generateAtomicClassNames = <C extends GenericConfig>(
 				}
 			}
 
-			// Base styles
-			const hashedBreakpoint = special?.breakpoint
-				? hashString(special.breakpoint, 2)
-				: null;
-			const hashedSelector = special?.selector
-				? hashString(special.selector, 2)
-				: null;
-			const hashedKey = hashString(key, 4);
-			const hashedValue = hashString(value.toString(), 4);
-			let className: string;
+			const className = buildClassName(key, value, special);
 
-			if (hashedBreakpoint && hashedSelector) {
-				className = `_${hashedBreakpoint}-${hashedSelector}-${hashedKey}-${hashedValue}`;
-			} else if (hashedBreakpoint) {
-				className = `_${hashedBreakpoint}-${hashedKey}-${hashedValue}`;
-			} else if (hashedSelector) {
-				className = `_${hashedSelector}-${hashedKey}-${hashedValue}`;
-			} else {
-				className = `_${hashedKey}-${hashedValue}`;
-			}
-
-			updateStyleSheet(
-				className,
-				key,
-				value,
-				config.shorthands,
-				config,
-				special
-			);
+			updateStyleSheet(className, key, value, config, special);
 			return className;
 		}
 	);
 	return atomicClassNames;
 };
 
-export const generateStyleSheets = <C extends GenericConfig>(config: C) => {
-	const styleElement = document.createElement("style");
-	styleElement.setAttribute("data-rivel", "");
-	document.head.appendChild(styleElement);
-	if (!config.breakpoints) return;
-	const breakpointsStyleElement = document.createElement("style");
-
-	if (!config.breakpoints) return;
-	breakpointsStyleElement.setAttribute("data-rivel-breakpoints", "");
-	document.head.appendChild(breakpointsStyleElement);
-	const breakpoints = Object.keys(config.breakpoints);
-	for (const breakpoint of breakpoints) {
-		breakpointsStyleElement.sheet?.insertRule(
-			`@media (max-width: ${config.breakpoints?.[breakpoint]}px) {}`
-		);
+const buildClassName = (
+	key: string,
+	value: string | number,
+	special?: {
+		breakpoint?: string;
+		selector?: string;
 	}
+) => {
+	const hashedBreakpoint = special?.breakpoint
+		? hashString(special.breakpoint, 2)
+		: null;
+	const hashedSelector = special?.selector
+		? hashString(special.selector, 2)
+		: null;
+	const hashedKey = hashString(key, 4);
+	const hashedValue = hashString(value.toString(), 4);
+
+	if (hashedBreakpoint && hashedSelector) {
+		return `_${hashedBreakpoint}-${hashedSelector}-${hashedKey}-${hashedValue}`;
+	}
+	if (hashedBreakpoint) {
+		return `_${hashedBreakpoint}-${hashedKey}-${hashedValue}`;
+	}
+	if (hashedSelector) {
+		return `_${hashedSelector}-${hashedKey}-${hashedValue}`;
+	}
+	return `_${hashedKey}-${hashedValue}`;
 };
 
 const updateStyleSheet = (
 	className: string,
 	styleKey: string,
 	styleValue: string | number,
-	shorthands: Record<string, unknown> | undefined,
 	config: GenericConfig,
 	special?: {
 		breakpoint?: string;
 		selector?: string;
 	}
 ) => {
-	const realKey = handleShorthands(styleKey, shorthands);
+	const realKey = handleShorthands(styleKey, config.shorthands);
 
 	if (styleCache.has(className)) return;
 
@@ -133,19 +118,10 @@ const updateStyleSheet = (
 				realKey,
 				styleValue,
 				ruleIndex,
-				config,
-				"html:root"
+				config
 			);
 		} else {
-			insertRule(
-				rule,
-				className,
-				realKey,
-				styleValue,
-				ruleIndex,
-				config,
-				"html:root"
-			);
+			insertRule(rule, className, realKey, styleValue, ruleIndex, config);
 		}
 		styleCache.set(className, ruleIndex);
 		return;
@@ -179,12 +155,10 @@ const insertRule = (
 	styleKey: string | string[],
 	styleValue: string | number,
 	index: number,
-	config: GenericConfig,
-	specificity?: string
+	config: GenericConfig
 ) => {
 	const el = element instanceof HTMLStyleElement ? element.sheet : element;
-	const specif = specificity || ":root";
-	const val =
+	const value =
 		typeof styleValue === "number"
 			? timeRelatedProperties.has(styleKey as StyleKeys)
 				? `${styleValue}${config.options?.cssTimeUnit}`
@@ -194,16 +168,34 @@ const insertRule = (
 		throw new Error("Element is not a valid HTMLStyleElement or CSSMediaRule");
 	if (typeof styleKey === "string") {
 		el.insertRule(
-			`${specif} .${className} { ${toKebabCase(styleKey)}: ${val}; }`,
+			`:root .${className} { ${toKebabCase(styleKey)}: ${value}; }`,
 			index
 		);
 	} else {
 		for (const key of styleKey) {
 			el.insertRule(
-				`${specif} .${className} { ${toKebabCase(key)}: ${val}; }`,
+				`:root .${className} { ${toKebabCase(key)}: ${value}; }`,
 				index
 			);
 		}
+	}
+};
+
+export const generateStyleSheets = (config: GenericConfig) => {
+	const styleElement = document.createElement("style");
+	styleElement.setAttribute("data-rivel", "");
+	document.head.appendChild(styleElement);
+	if (!config.breakpoints) return;
+	const breakpointsStyleElement = document.createElement("style");
+
+	if (!config.breakpoints) return;
+	breakpointsStyleElement.setAttribute("data-rivel-breakpoints", "");
+	document.head.appendChild(breakpointsStyleElement);
+	const breakpoints = Object.keys(config.breakpoints);
+	for (const breakpoint of breakpoints) {
+		breakpointsStyleElement.sheet?.insertRule(
+			`@media (max-width: ${config.breakpoints?.[breakpoint]}px) {}`
+		);
 	}
 };
 

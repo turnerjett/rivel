@@ -61,5 +61,9 @@ if (import.meta.vitest) {
 	test("camel case to kebab case", () => {
 		const result1 = toKebabCase("animationDuration");
 		expect(result1).toEqual("animation-duration");
+		const result2 = toKebabCase("animation-duration");
+		expect(result2).toEqual("animation-duration");
+		const result3 = toKebabCase("animationTimingFunction");
+		expect(result3).toEqual("animation-timing-function");
 	});
 }
