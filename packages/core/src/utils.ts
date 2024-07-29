@@ -26,6 +26,10 @@ export const withElevation = (palette: string[], elevation: number) => {
 	});
 };
 
+export const toKebabCase = (str: string) => {
+	return str.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
+};
+
 if (import.meta.vitest) {
 	const { test, expect } = import.meta.vitest;
 
@@ -52,5 +56,10 @@ if (import.meta.vitest) {
 		expect(result1).toEqual(["#000", "#000", "#001"]);
 		const result2 = withElevation(palette, -2);
 		expect(result2).toEqual(["#000", "#000", "#000"]);
+	});
+
+	test("camel case to kebab case", () => {
+		const result1 = toKebabCase("animationDuration");
+		expect(result1).toEqual("animation-duration");
 	});
 }

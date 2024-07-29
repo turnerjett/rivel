@@ -50,15 +50,18 @@ export default function App() {
 const Page = () => (
 	<div
 		use:rv={{
-			w: "10rem",
-			h: "10rem",
+			w: 10,
+			h: 10,
+			transitionDuration: 200,
+			transitionTimingFunction: "ease-in-out",
+			transitionProperty: "all",
 			$sm: {
-				w: "15rem",
-				h: "15rem",
+				w: 15,
+				h: 15,
 			},
 			$md: {
-				w: "20rem",
-				h: "20rem",
+				w: 20,
+				h: 20,
 				$select: {
 					":hover": {
 						bg: rv.colors().solid.default,

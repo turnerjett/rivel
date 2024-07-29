@@ -1,6 +1,5 @@
 import type * as CSS from "csstype";
 
-// TODO: Allow user to set sizing units and time scale. Default to rem and ms
 export type CSSProperties = CSS.StandardProperties<
 	string | number,
 	string | number
@@ -8,6 +7,7 @@ export type CSSProperties = CSS.StandardProperties<
 export type CSSPropertyKeys = keyof CSSProperties;
 
 export type Styles = CSSProperties;
+export type StyleKeys = keyof Styles;
 
 export interface Variants<S extends GenericStyles> {
 	readonly [key: string]: {

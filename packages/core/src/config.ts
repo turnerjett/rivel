@@ -39,6 +39,10 @@ export interface Config<
 	values: (theme: { palette: string[] }) => V;
 	shorthands?: SH;
 	breakpoints?: BP;
+	options?: {
+		cssSizeUnit?: "rem" | "px";
+		cssTimeUnit?: "s" | "ms";
+	};
 }
 
 export type GenericConfig = Config<
@@ -64,6 +68,17 @@ export const createConfig = <
 >(
 	config: Config<SK, PK, TK, V, SH, BP>
 ) => {
+	if (!config.options) {
+		config.options = {};
+	}
+	config.options = Object.assign(
+		{
+			cssSizeUnit: "rem",
+			cssTimeUnit: "ms",
+		},
+		config.options
+	);
+
 	const defaultTheme = Object.keys(config.themes)[0] as TK;
 	if (!defaultTheme) {
 		throw new Error("Config must specify at least one theme");

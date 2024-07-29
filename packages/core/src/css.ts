@@ -1,5 +1,6 @@
 import type { Breakpoints, GenericConfig, SpecialProperties } from "./config";
-import type { Styles } from "./types";
+import type { StyleKeys, Styles } from "./types";
+import { toKebabCase } from "./utils";
 
 type StylesWithSpecialProperties = Styles &
 	SpecialProperties<Styles, Breakpoints>;
@@ -66,7 +67,7 @@ export const generateAtomicClassNames = <C extends GenericConfig>(
 			updateStyleSheet(
 				className,
 				key,
-				value.toString(),
+				value,
 				config.shorthands,
 				config,
 				special
@@ -98,7 +99,7 @@ export const generateStyleSheets = <C extends GenericConfig>(config: C) => {
 const updateStyleSheet = (
 	className: string,
 	styleKey: string,
-	styleValue: string,
+	styleValue: string | number,
 	shorthands: Record<string, unknown> | undefined,
 	config: GenericConfig,
 	special?: {
@@ -132,10 +133,19 @@ const updateStyleSheet = (
 				realKey,
 				styleValue,
 				ruleIndex,
+				config,
 				"html:root"
 			);
 		} else {
-			insertRule(rule, className, realKey, styleValue, ruleIndex, "html:root");
+			insertRule(
+				rule,
+				className,
+				realKey,
+				styleValue,
+				ruleIndex,
+				config,
+				"html:root"
+			);
 		}
 		styleCache.set(className, ruleIndex);
 		return;
@@ -146,12 +156,20 @@ const updateStyleSheet = (
 			`${className}${special.selector}`,
 			realKey,
 			styleValue,
-			styleIndex()
+			styleIndex(),
+			config
 		);
 		styleCache.set(className, styleIndex());
 		return;
 	}
-	insertRule(styleElement, className, realKey, styleValue, styleIndex());
+	insertRule(
+		styleElement,
+		className,
+		realKey,
+		styleValue,
+		styleIndex(),
+		config
+	);
 	styleCache.set(className, styleIndex());
 };
 
@@ -159,32 +177,46 @@ const insertRule = (
 	element: HTMLStyleElement | CSSMediaRule,
 	className: string,
 	styleKey: string | string[],
-	styleValue: string,
+	styleValue: string | number,
 	index: number,
+	config: GenericConfig,
 	specificity?: string
 ) => {
 	const el = element instanceof HTMLStyleElement ? element.sheet : element;
 	const specif = specificity || ":root";
+	const val =
+		typeof styleValue === "number"
+			? timeRelatedProperties.has(styleKey as StyleKeys)
+				? `${styleValue}${config.options?.cssTimeUnit}`
+				: `${styleValue}${config.options?.cssSizeUnit}`
+			: styleValue;
 	if (!el)
 		throw new Error("Element is not a valid HTMLStyleElement or CSSMediaRule");
 	if (typeof styleKey === "string") {
 		el.insertRule(
-			`${specif} .${className} { ${toKebabCase(styleKey)}: ${styleValue}; }`,
+			`${specif} .${className} { ${toKebabCase(styleKey)}: ${val}; }`,
 			index
 		);
 	} else {
 		for (const key of styleKey) {
 			el.insertRule(
-				`${specif} .${className} { ${toKebabCase(key)}: ${styleValue}; }`,
+				`${specif} .${className} { ${toKebabCase(key)}: ${val}; }`,
 				index
 			);
 		}
 	}
 };
 
-const toKebabCase = (str: string) => {
-	return str.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
-};
+const timeRelatedProperties = new Set<StyleKeys>([
+	"animationDelay",
+	"animationDuration",
+	"transitionDelay",
+	"transitionDuration",
+	"animation",
+	"transition",
+	"animationTimingFunction",
+	"transitionTimingFunction",
+]);
 
 const handleShorthands = (
 	styleKey: string,
