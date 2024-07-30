@@ -149,31 +149,14 @@ const updateStyleSheet = (
 		const rule = breakpointStyleElement.sheet?.cssRules[index] as CSSMediaRule;
 		let ruleToInsert: CSSRule;
 		if (special.selector) {
-			if (special.selector.self) {
-				ruleToInsert = insertRule(
-					rule,
-					`.${className}${special.selector.self}`,
-					realKey,
-					styleValue,
-					config
-				);
-			} else if (special.selector.parent) {
-				ruleToInsert = insertRule(
-					rule,
-					`${special.selector.parent} > .${className}`,
-					realKey,
-					styleValue,
-					config
-				);
-			} else if (special.selector.ancestor) {
-				ruleToInsert = insertRule(
-					rule,
-					`${special.selector.ancestor} .${className}`,
-					realKey,
-					styleValue,
-					config
-				);
-			} else throw new Error("Invalid selector object");
+			ruleToInsert = insertSelector(
+				rule,
+				className,
+				realKey,
+				styleValue,
+				special,
+				config
+			);
 		} else {
 			ruleToInsert = insertRule(
 				rule,
@@ -191,32 +174,14 @@ const updateStyleSheet = (
 		return;
 	}
 	if (special?.selector) {
-		let ruleToInsert: CSSRule;
-		if (special.selector.self) {
-			ruleToInsert = insertRule(
-				styleElement,
-				`.${className}${special.selector.self}`,
-				realKey,
-				styleValue,
-				config
-			);
-		} else if (special.selector.parent) {
-			ruleToInsert = insertRule(
-				styleElement,
-				`${special.selector.parent} > .${className}`,
-				realKey,
-				styleValue,
-				config
-			);
-		} else if (special.selector.ancestor) {
-			ruleToInsert = insertRule(
-				styleElement,
-				`${special.selector.ancestor} .${className}`,
-				realKey,
-				styleValue,
-				config
-			);
-		} else throw new Error("Invalid selector object");
+		const ruleToInsert = insertSelector(
+			styleElement,
+			className,
+			realKey,
+			styleValue,
+			special,
+			config
+		);
 		styleCache.set(className, {
 			rule: ruleToInsert,
 			references: 1,
@@ -234,6 +199,45 @@ const updateStyleSheet = (
 		rule: ruleToInsert,
 		references: 1,
 	});
+};
+
+const insertSelector = (
+	element: HTMLStyleElement | CSSMediaRule,
+	className: string,
+	key: string | string[],
+	value: string | number,
+	special: SpecialArgs,
+	config: GenericConfig
+) => {
+	if (!special.selector) throw new Error("Invalid selector object");
+	if (special.selector.self) {
+		return insertRule(
+			element,
+			`.${className}${special.selector.self}`,
+			key,
+			value,
+			config
+		);
+	}
+	if (special.selector.parent) {
+		return insertRule(
+			element,
+			`${special.selector.parent} > .${className}`,
+			key,
+			value,
+			config
+		);
+	}
+	if (special.selector.ancestor) {
+		return insertRule(
+			element,
+			`${special.selector.ancestor} .${className}`,
+			key,
+			value,
+			config
+		);
+	}
+	throw new Error("Invalid selector object");
 };
 
 const insertRule = (
