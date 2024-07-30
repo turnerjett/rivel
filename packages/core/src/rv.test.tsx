@@ -32,7 +32,7 @@ test("style element", () => {
 });
 
 test("update element styles", () => {
-	const [styles, setStyles] = createSignal({
+	const [styles, setStyles] = createSignal<RVDirective<typeof rv>>({
 		bg: "red",
 	});
 
@@ -45,7 +45,7 @@ test("update element styles", () => {
 });
 
 test("delete styles from style sheet", () => {
-	const [styles, setStyles] = createSignal({
+	const [styles, setStyles] = createSignal<RVDirective<typeof rv>>({
 		bg: "red",
 	});
 
@@ -124,4 +124,85 @@ test("set selector inside breakpoint", () => {
 		/>
 	));
 	expect(container.firstChild).toHaveClass("_bg-red", "_sm-self-hover-bg-blue");
+});
+
+test("nested breakpoint error", () => {
+	expect(() =>
+		render(() => (
+			<div
+				use:rv={{
+					bg: "red",
+					// @ts-expect-error
+					$sm: { $md: { bg: "blue" } },
+				}}
+			/>
+		))
+	).toThrow("Nested breakpoints are not supported");
+});
+
+test("nested selector error", () => {
+	expect(() =>
+		render(() => (
+			<div
+				use:rv={{
+					bg: "red",
+					// @ts-expect-error
+					$select: { ":hover": { $select: { ":active": { bg: "blue" } } } },
+				}}
+			/>
+		))
+	).toThrow("Nested selectors are not supported");
+});
+
+test("size related properties", () => {
+	const { container } = render(() => (
+		<div use:rv={{ bg: "red", w: 10, h: 10 }} />
+	));
+	expect(container.firstChild).toHaveStyle("width: 10rem");
+	expect(container.firstChild).toHaveStyle("height: 10rem");
+});
+
+test("time related properties", () => {
+	const { container } = render(() => (
+		<div use:rv={{ bg: "red", animation: 100 }} />
+	));
+	expect(container.firstChild).toHaveStyle("animation: 100ms");
+});
+
+test("add dynamic styles", async () => {
+	const { container } = render(() => (
+		<div
+			use:rv={{
+				$dynamic: () => ({ backgroundColor: "red" }),
+			}}
+		/>
+	));
+	expect(container.firstChild).toHaveStyle("background-color: rgb(255, 0, 0)");
+});
+
+test("update dynamic styles", async () => {
+	const [styles, setStyles] = createSignal<RVDirective<typeof rv>>({
+		$dynamic: () => ({ backgroundColor: "red" }),
+	});
+	const { container } = render(() => <div use:rv={styles()} />);
+	expect(container.firstChild).toHaveStyle("background-color: rgb(255, 0, 0)");
+	setStyles({
+		$dynamic: () => ({ backgroundColor: "blue" }),
+	});
+	expect(container.firstChild).toHaveStyle("background-color: rgb(0, 0, 255)");
+});
+
+test("update unrelated dynamic styles", async () => {
+	const [styles, setStyles] = createSignal<RVDirective<typeof rv>>({
+		$dynamic: () => ({ backgroundColor: "red" }),
+	});
+	const { container } = render(() => <div use:rv={styles()} />);
+	expect(container.firstChild).toHaveStyle("background-color: rgb(255, 0, 0)");
+	setStyles({
+		$dynamic: () => ({ display: "none" }),
+	});
+	expect(container.firstChild).toHaveStyle("display: none");
+	expect(container.firstChild).not.toHaveStyle(
+		"background-color: rgb(255, 0, 0)"
+	);
 });

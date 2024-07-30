@@ -65,7 +65,7 @@ const Page = () => (
 				h: 20,
 				$select: {
 					":hover": {
-						bg: rv.colors().solid.default,
+						bg: rv.colors().background.hover,
 					},
 				},
 			},
@@ -74,6 +74,15 @@ const Page = () => (
 			bw: "1px",
 			bs: "solid",
 			col: rv.colors().textPrimary,
+			$dynamic: ({ mouse }) => {
+				const { x, y } = mouse.local.pos();
+				const isDown = mouse.local.isDown();
+				return {
+					"--pos-x": x,
+					"--pos-y": y,
+					bg: isDown ? "red" : rv.colors().background.default,
+				};
+			},
 			$select: {
 				":hover": {
 					bg: rv.colors().background.hover,
@@ -81,8 +90,9 @@ const Page = () => (
 				"::after": {
 					content: "''",
 					dis: "block",
-					w: "100%",
+					w: "10%",
 					h: "10%",
+					translate: "var(--pos-x) var(--pos-y)",
 					bg: rv.colors().solid.default,
 				},
 			},

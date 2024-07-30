@@ -6,7 +6,8 @@ export type CSSProperties = CSS.StandardProperties<
 >;
 export type CSSPropertyKeys = keyof CSSProperties;
 
-export type Styles = CSSProperties;
+export type Vars = Record<`--${string}`, string | number>;
+export type Styles = CSSProperties & Vars;
 export type StyleKeys = keyof Styles;
 
 export interface Variants<S extends GenericStyles> {
@@ -44,15 +45,19 @@ export type BaseSpecialProperties<S> = MapSpecialProperties<{
 	select: Partial<Record<CSS.SimplePseudos, S>>;
 	parentSelect: Partial<Record<SimplePseudoClasses, S>>;
 	ancestorSelect: Partial<Record<SimplePseudoClasses, S>>;
+	dynamic: (vals: {
+		mouse: {
+			global: {
+				pos: () => { x: number; y: number };
+				isDown: () => boolean;
+			};
+			local: {
+				pos: () => { x: number; y: number };
+				isDown: () => boolean;
+			};
+		};
+	}) => S;
 }>;
-
-export type MapSpecialProperties<S extends Record<string, unknown>> = {
-	[K in keyof S as `$${string & K}`]?: S[K];
-};
-
-type GetSecondArg<T> = T extends (...args: infer P) => unknown ? P[1] : never;
-type GetAccessorType<T> = T extends (...args: unknown[]) => infer P ? P : never;
-export type RVDirective<RV> = GetAccessorType<GetSecondArg<RV>>;
 
 export type SpecialProperties<
 	S,
@@ -61,5 +66,13 @@ export type SpecialProperties<
 	(BP extends undefined
 		? never
 		: MapSpecialProperties<{
-				[key in keyof BP]: S & BaseSpecialProperties<S>;
+				[key in keyof BP]: S & Omit<BaseSpecialProperties<S>, "$dynamic">;
 		  }>);
+
+export type MapSpecialProperties<S extends Record<string, unknown>> = {
+	[K in keyof S as `$${string & K}`]?: S[K];
+};
+
+type GetSecondArg<T> = T extends (...args: infer P) => unknown ? P[1] : never;
+type GetAccessorType<T> = T extends (...args: unknown[]) => infer P ? P : never;
+export type RVDirective<RV> = GetAccessorType<GetSecondArg<RV>>;

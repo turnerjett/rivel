@@ -33,6 +33,8 @@ export const generateAtomicClassNames = (
 		([key, value]) => {
 			if (key.startsWith("$")) {
 				const specialProperty = key.replace("$", "");
+				if (specialProperty === "dynamic") return [];
+
 				if (config.breakpoints && specialProperty in config.breakpoints) {
 					if (special?.breakpoint)
 						throw new Error("Nested breakpoints are not supported");
@@ -317,7 +319,7 @@ export const generateStyleSheets = (config: GenericConfig) => {
 	}
 };
 
-const timeRelatedProperties = new Set<StyleKeys>([
+export const timeRelatedProperties = new Set<StyleKeys>([
 	"animationDelay",
 	"animationDuration",
 	"transitionDelay",

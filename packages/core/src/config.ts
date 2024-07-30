@@ -1,9 +1,4 @@
-import {
-	type Accessor,
-	createContext,
-	createRenderEffect,
-	useContext,
-} from "solid-js";
+import { type Accessor, createContext, useContext } from "solid-js";
 import type {
 	Styles,
 	CSSPropertyShorthands,
@@ -11,12 +6,9 @@ import type {
 	SpecialProperties,
 } from "./types";
 import { themeProviderFromContext } from "./theme";
-import {
-	generateAtomicClassNames,
-	generateStyleSheets,
-	removeClasses,
-} from "./css";
+import { generateStyleSheets } from "./css";
 import { withElevation, withStaticProperties } from "./utils";
+import { rvStylesWithConfig } from "./rv";
 
 export type Palettes<SK extends string, PK extends string> = {
 	[key in SK]: {
@@ -62,10 +54,6 @@ export type GenericConfig = Config<
 	Breakpoints
 >;
 
-// SK = Scheme Key
-// PK = Palette Key
-// TK = Theme Key
-// V = Values
 export const createConfig = <
 	SK extends string,
 	PK extends string,
@@ -135,7 +123,10 @@ export const createConfig = <
 		config.breakpoints = Object.fromEntries(sorted) as BP;
 	}
 	if (typeof window !== "undefined") {
-		generateStyleSheets(config);
+		const stylesheet =
+			document.querySelector("style[data-rivel]") ||
+			document.querySelector("style[data-rivel-breakpoints]");
+		if (!stylesheet) generateStyleSheets(config);
 	}
 
 	type MergedStyles = SH extends undefined
@@ -146,8 +137,7 @@ export const createConfig = <
 		(
 			el: Element,
 			styles: Accessor<MergedStyles & SpecialProperties<MergedStyles, BP>>
-		) =>
-			rvStylesWithConfig<typeof config, MergedStyles, BP>(el, styles, config),
+		) => rvStylesWithConfig<MergedStyles, BP>(el, styles, config),
 		{
 			...values,
 			Theme: themeProviderFromContext<typeof config>(ThemeContext),
@@ -155,32 +145,4 @@ export const createConfig = <
 	);
 
 	return { config, rv };
-};
-
-const rvStylesWithConfig = <
-	C extends GenericConfig,
-	S extends Styles,
-	BP extends Breakpoints | undefined
->(
-	el: Element,
-	styles: Accessor<S & SpecialProperties<S, BP>>,
-	config: C
-) => {
-	let prevClassNames: string[] = [];
-	createRenderEffect(() => {
-		const classNames = generateAtomicClassNames(
-			styles(),
-			prevClassNames,
-			config
-		);
-		if (prevClassNames.length > 0) {
-			const removed = prevClassNames.filter(
-				(className) => !classNames.includes(className)
-			);
-			removeClasses(removed);
-			el.classList.remove(...removed);
-		}
-		el.classList.add(...classNames);
-		prevClassNames = classNames;
-	});
 };
