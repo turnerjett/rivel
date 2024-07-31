@@ -56,6 +56,14 @@ export type BaseSpecialProperties<S> = MapSpecialProperties<{
 				isDown: () => boolean;
 			};
 		};
+		scroll: {
+			global: {
+				pos: () => { x: number; y: number };
+			};
+			local: {
+				pos: () => { x: number; y: number };
+			};
+		};
 	}) => S;
 }>;
 

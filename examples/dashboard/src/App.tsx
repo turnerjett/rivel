@@ -17,8 +17,6 @@ export default function App() {
 		<rv.Theme scheme="dark">
 			<div
 				use:rv={{
-					w: "100vw",
-					h: "100vh",
 					bg: rv.colors().background.default,
 					dis: "flex",
 					fd: "column",
@@ -44,6 +42,11 @@ export default function App() {
 					Lower
 				</button>
 			</div>
+			<div
+				use:rv={{
+					h: 100,
+				}}
+			/>
 		</rv.Theme>
 	);
 }
@@ -74,9 +77,12 @@ const Page = () => (
 			bw: "1px",
 			bs: "solid",
 			col: rv.colors().textPrimary,
-			$dynamic: ({ mouse }) => {
+			ovy: "scroll",
+			$dynamic: ({ mouse, scroll }) => {
 				const { x, y } = mouse.local.pos();
 				const isDown = mouse.local.isDown();
+				const scrollY = scroll.local.pos().y;
+				console.log(scrollY);
 				return {
 					"--pos-x": x,
 					"--pos-y": y,
