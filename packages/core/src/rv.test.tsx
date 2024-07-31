@@ -1,4 +1,4 @@
-import { test, expect, beforeEach } from "vitest";
+import { test, expect, beforeEach, vi } from "vitest";
 import { render } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import { createConfig } from "./config";
@@ -205,4 +205,51 @@ test("update unrelated dynamic styles", async () => {
 	expect(container.firstChild).not.toHaveStyle(
 		"background-color: rgb(255, 0, 0)"
 	);
+});
+
+test("multiple dynamic components", () => {
+	const addEventListenerSpy = vi.spyOn(document, "addEventListener");
+
+	render(() => (
+		<>
+			<div
+				use:rv={{
+					$dynamic: ({ mouse }) => ({
+						"--pos-x": mouse.local.pos().x,
+						"--pos-y": mouse.local.pos().y,
+					}),
+				}}
+			/>
+			<div
+				use:rv={{
+					$dynamic: ({ mouse }) => ({
+						"--pos-x": mouse.local.pos().x,
+						"--pos-y": mouse.local.pos().y,
+					}),
+				}}
+			/>
+		</>
+	));
+
+	expect(addEventListenerSpy).toHaveBeenCalledTimes(1);
+});
+
+test("remove event listeners", () => {
+	const addEventListenerSpy = vi.spyOn(document, "addEventListener");
+	const removeEventListenerSpy = vi.spyOn(document, "removeEventListener");
+
+	const { unmount } = render(() => (
+		<div
+			use:rv={{
+				$dynamic: ({ mouse }) => ({
+					bg: mouse.global.isDown() ? "red" : "blue",
+				}),
+			}}
+		/>
+	));
+	expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
+	expect(removeEventListenerSpy).toHaveBeenCalledTimes(0);
+	unmount();
+	expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
+	expect(removeEventListenerSpy).toHaveBeenCalledTimes(2);
 });

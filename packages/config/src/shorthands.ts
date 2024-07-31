@@ -41,6 +41,7 @@ export const baseShorthands = {
 	blw: "borderLeftWidth",
 	bls: "borderLeftStyle",
 	blc: "borderLeftColor",
+	rd: "borderRadius",
 
 	// Position
 	pos: "position",
@@ -114,6 +115,7 @@ export const baseShorthands = {
 
 	// Other
 	dis: "display",
+	zi: "zIndex",
 	op: "opacity",
 	vis: "visibility",
 	pe: "pointerEvents",

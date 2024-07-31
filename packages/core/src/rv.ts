@@ -2,7 +2,7 @@ import { type Accessor, createRenderEffect, onCleanup } from "solid-js";
 import type { Breakpoints, GenericConfig } from "./config";
 import type { SpecialProperties, Styles } from "./types";
 import { generateAtomicClassNames, removeClasses } from "./css";
-import { updateStyles } from "./rv-dynamic";
+import { updateStyles } from "./dynamic";
 
 export const rvStylesWithConfig = <
 	S extends Styles,
