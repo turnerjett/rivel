@@ -138,22 +138,22 @@ export const defaultConfig = createConfigObject({
 		colors: {
 			background: {
 				default: palette[0],
-				hover: palette[1],
-				active: palette[2],
+				hover: palette[2],
+				active: palette[1],
 			},
 			border: {
 				default: palette[3],
-				hover: palette[4],
-				active: palette[5],
+				hover: palette[5],
+				active: palette[4],
 			},
 			solid: {
 				default: palette[6],
-				hover: palette[7],
-				active: palette[8],
+				hover: palette[8],
+				active: palette[7],
 			},
 			contrast: {
-				default: palette[11],
-				hover: palette[10],
+				default: palette[10],
+				hover: palette[11],
 				active: palette[9],
 			},
 			textSecondary: palette[10],

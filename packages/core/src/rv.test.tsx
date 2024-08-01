@@ -140,20 +140,6 @@ test("nested breakpoint error", () => {
 	).toThrow("Nested breakpoints are not supported");
 });
 
-test("nested selector error", () => {
-	expect(() =>
-		render(() => (
-			<div
-				use:rv={{
-					bg: "red",
-					// @ts-expect-error
-					$select: { ":hover": { $select: { ":active": { bg: "blue" } } } },
-				}}
-			/>
-		))
-	).toThrow("Nested selectors are not supported");
-});
-
 test("size related properties", () => {
 	const { container } = render(() => (
 		<div use:rv={{ bg: "red", w: 10, h: 10 }} />

@@ -43,7 +43,7 @@ const updateElementStyles = (
 ) => {
 	const style = el.style;
 	const newKeys = new Set<StyleKeys>();
-	for (const [key, value] of Object.entries(styles)) {
+	for (const [key, value] of Object.entries(styles).reverse()) {
 		if (previousStyleKeys.has(key as StyleKeys)) {
 			previousStyleKeys.delete(key as StyleKeys);
 		}

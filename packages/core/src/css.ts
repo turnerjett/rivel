@@ -29,8 +29,9 @@ export const generateAtomicClassNames = (
 	config: GenericConfig,
 	special?: SpecialArgs
 ) => {
-	const atomicClassNames: string[] = Object.entries(styles).flatMap(
-		([key, value]) => {
+	const atomicClassNames: string[] = Object.entries(styles)
+		.reverse()
+		.flatMap(([key, value]) => {
 			if (key.startsWith("$")) {
 				const specialProperty = key.replace("$", "");
 				if (specialProperty === "dynamic") return [];
@@ -49,21 +50,23 @@ export const generateAtomicClassNames = (
 						.toLowerCase()
 						.replace("select", "");
 					selectorType = selectorType ? selectorType : "self";
-					return Object.entries(value).flatMap(([selector, styles]) => {
-						const selectorObj = {
-							...special?.selector,
-							[selectorType]: selector,
-						};
-						return generateAtomicClassNames(
-							styles as StylesWithSpecialProperties,
-							exclude,
-							config,
-							{
-								...special,
-								selector: selectorObj,
-							}
-						);
-					});
+					return Object.entries(value)
+						.reverse()
+						.flatMap(([selector, styles]) => {
+							const selectorObj = {
+								...special?.selector,
+								[selectorType]: selector,
+							};
+							return generateAtomicClassNames(
+								styles as StylesWithSpecialProperties,
+								exclude,
+								config,
+								{
+									...special,
+									selector: selectorObj,
+								}
+							);
+						});
 				}
 			}
 
@@ -72,8 +75,7 @@ export const generateAtomicClassNames = (
 
 			updateStyleSheet(className, key, value, config, special);
 			return className;
-		}
-	);
+		});
 	return atomicClassNames;
 };
 
@@ -232,12 +234,7 @@ const insertRule = (
 	config: GenericConfig
 ): CSSRule => {
 	const el = element instanceof HTMLStyleElement ? element.sheet : element;
-	const value =
-		typeof styleValue === "number"
-			? timeRelatedProperties.has(styleKey as StyleKeys)
-				? `${styleValue}${config.options?.cssTimeUnit}`
-				: `${styleValue}${config.options?.cssSizeUnit}`
-			: styleValue;
+	const value = withCorrectUnit(styleValue, styleKey, config);
 	if (!el)
 		throw new Error("Element is not a valid HTMLStyleElement or CSSMediaRule");
 	let ruleString: string;
@@ -250,6 +247,25 @@ const insertRule = (
 	el.insertRule(`:root ${className} { ${ruleString} }`);
 	// biome-ignore lint/style/noNonNullAssertion: this is not null due to the insertRule above
 	return el.cssRules[0]!;
+};
+
+const withCorrectUnit = (
+	styleValue: string | number,
+	styleKey: string | string[],
+	config: GenericConfig
+) => {
+	if (typeof styleValue !== "number") return styleValue;
+	const isTimeRelated =
+		typeof styleKey === "string"
+			? timeRelatedProperties.has(styleKey as StyleKeys)
+			: styleKey.some((key) => timeRelatedProperties.has(key as StyleKeys));
+	if (isTimeRelated) return `${styleValue}${config.options?.cssTimeUnit}`;
+	const isWithoutUnit =
+		typeof styleKey === "string"
+			? withoutUnitProperties.has(styleKey as StyleKeys)
+			: styleKey.some((key) => withoutUnitProperties.has(key as StyleKeys));
+	if (isWithoutUnit) return styleValue.toString();
+	return `${styleValue}${config.options?.cssSizeUnit}`;
 };
 
 export const removeClasses = (classes: string[]) => {
@@ -310,6 +326,31 @@ export const timeRelatedProperties = new Set<StyleKeys>([
 	"transition",
 	"animationTimingFunction",
 	"transitionTimingFunction",
+]);
+
+export const withoutUnitProperties = new Set<StyleKeys>([
+	"opacity",
+	"flex",
+	"flexGrow",
+	"flexShrink",
+	"order",
+	"zIndex",
+	"aspectRatio",
+	"columns",
+	"fontWeight",
+	"lineHeight",
+	"scale",
+	"rotate",
+	"gridColumn",
+	"gridRow",
+	"gridColumnStart",
+	"gridColumnEnd",
+	"gridRowStart",
+	"gridRowEnd",
+	"columnCount",
+	"orphans",
+	"widows",
+	"tabSize",
 ]);
 
 const handleShorthands = (

@@ -67,13 +67,11 @@ export const createConfig = <
 	if (!config.options) {
 		config.options = {};
 	}
-	config.options = Object.assign(
-		{
-			cssSizeUnit: "rem",
-			cssTimeUnit: "ms",
-		},
-		config.options
-	);
+	config.options = {
+		cssSizeUnit: "rem",
+		cssTimeUnit: "ms",
+		...config.options,
+	};
 
 	const defaultTheme = Object.keys(config.themes)[0] as TK;
 	if (!defaultTheme) {
@@ -143,6 +141,5 @@ export const createConfig = <
 			Theme: themeProviderFromContext<typeof config>(ThemeContext),
 		}
 	);
-
 	return { config, rv };
 };
