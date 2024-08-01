@@ -1,5 +1,6 @@
 import { test, expect, beforeEach, vi } from "vitest";
 import { render } from "@solidjs/testing-library";
+import userEvent from "@testing-library/user-event";
 import { createSignal } from "solid-js";
 import { createConfig } from "./config";
 import { defaultConfig } from "@rivel/config";
@@ -238,4 +239,28 @@ test("remove event listeners", () => {
 	unmount();
 	expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
 	expect(removeEventListenerSpy).toHaveBeenCalledTimes(2);
+});
+
+test("trigger dynamic", async () => {
+	const user = userEvent.setup();
+	const { container } = render(() => (
+		<div
+			use:rv={{
+				$dynamic: ({ mouse }) => ({
+					bg: mouse.global.isDown() ? "red" : "blue",
+				}),
+			}}
+		/>
+	));
+	expect(container.firstChild).toHaveStyle("background-color: rgb(0, 0, 255)");
+	await user.pointer({
+		target: container.firstChild as Element,
+		keys: "[MouseLeft>]",
+	});
+	expect(container.firstChild).toHaveStyle("background-color: rgb(255, 0, 0)");
+	await user.pointer({
+		target: container.firstChild as Element,
+		keys: "[/MouseLeft]",
+	});
+	expect(container.firstChild).toHaveStyle("background-color: rgb(0, 0, 255)");
 });

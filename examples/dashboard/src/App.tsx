@@ -1,125 +1,62 @@
 import { rv } from "../rivel.config";
-import { createSignal } from "solid-js";
+import { Button } from "./components/button";
 
 export default function App() {
-	const [theme, setTheme] = createSignal<"blue" | "base">("blue");
-	const [scheme, setScheme] = createSignal<"dark" | "light">("dark");
-	const [elevation, setElevation] = createSignal(0);
-	const toggleTheme = () => {
-		setTheme(theme() === "blue" ? "base" : "blue");
-	};
-	const toggleScheme = () => {
-		setScheme(scheme() === "dark" ? "light" : "dark");
-	};
-	const raise = () => setElevation(elevation() + 1);
-	const lower = () => setElevation(elevation() - 1);
+	return <Page />;
+}
+
+const Page = () => {
 	return (
 		<rv.Theme scheme="dark">
 			<div
 				use:rv={{
-					bg: rv.colors().background.default,
+					h: "100vh",
+					w: "100vw",
 					dis: "flex",
-					fd: "column",
 					jc: "center",
 					ai: "center",
-					gap: "1rem",
-					col: rv.colors().textPrimary,
+					fd: "column",
+					bg: rv.colors().background.default,
+					gap: 1,
 				}}
 			>
-				<rv.Theme name={theme()} scheme={scheme()} elevation={elevation()}>
-					<Page />
+				<rv.Theme elevation={1}>
+					<ButtonGroup />
+					<rv.Theme scheme={(scheme) => (scheme === "dark" ? "light" : "dark")}>
+						<ButtonGroup />
+					</rv.Theme>
 				</rv.Theme>
-				<button type="button" onClick={toggleScheme}>
-					Toggle scheme
-				</button>
-				<button type="button" onClick={toggleTheme}>
-					Toggle theme
-				</button>
-				<button type="button" onClick={raise}>
-					Raise
-				</button>
-				<button type="button" onClick={lower}>
-					Lower
-				</button>
 			</div>
-			<div
-				use:rv={{
-					h: 100,
-				}}
-			/>
 		</rv.Theme>
 	);
-}
+};
 
-const Page = () => (
-	<div
-		use:rv={{
-			w: 10,
-			h: 10,
-			transitionDuration: 200,
-			transitionTimingFunction: "ease-in-out",
-			transitionProperty: "all",
-			$sm: {
-				w: 15,
-				h: 15,
-			},
-			$md: {
-				w: 20,
-				h: 20,
-				$select: {
-					":hover": {
-						bg: rv.colors().background.hover,
-					},
-				},
-			},
-			bg: rv.colors().background.default,
-			bc: rv.colors().border.default,
-			bw: "1px",
-			bs: "solid",
-			col: rv.colors().textPrimary,
-			ovy: "scroll",
-			$dynamic: ({ mouse, scroll }) => {
-				const { x, y } = mouse.local.pos();
-				const isDown = mouse.local.isDown();
-				const scrollY = scroll.local.pos().y;
-				console.log(scrollY);
-				return {
-					"--pos-x": x,
-					"--pos-y": y,
-					bg: isDown ? "red" : rv.colors().background.default,
-				};
-			},
-			$select: {
-				":hover": {
-					bg: rv.colors().background.hover,
-				},
-				"::after": {
-					content: "''",
-					dis: "block",
-					w: "10%",
-					h: "10%",
-					translate: "var(--pos-x) var(--pos-y)",
-					bg: rv.colors().solid.default,
-				},
-			},
-		}}
-	>
-		<rv.Theme elevation={(surface) => surface + 2}>
-			<div
-				use:rv={{
-					col: rv.colors().textPrimary,
-					bg: rv.colors().background.default,
-					ta: "center",
-					p: "1rem",
-					$parentSelect: {
-						":hover": {
-							bg: rv.colors().background.hover,
-						},
-					},
-				}}
-			>
-				Test
-			</div>
-		</rv.Theme>
-	</div>
-);
+const ButtonGroup = () => {
+	return (
+		<div
+			use:rv={{
+				dis: "flex",
+				gap: 1,
+				p: 1,
+				bs: "solid",
+				bw: "1px",
+				bc: rv.colors().border.default,
+				bg: rv.colors().background.default,
+				rd: 0.5,
+			}}
+		>
+			<rv.Theme name="base">
+				<Button>Button</Button>
+			</rv.Theme>
+			<rv.Theme name="success">
+				<Button>Button</Button>
+			</rv.Theme>
+			<rv.Theme name="warning">
+				<Button>Button</Button>
+			</rv.Theme>
+			<rv.Theme name="error">
+				<Button>Button</Button>
+			</rv.Theme>
+		</div>
+	);
+};
