@@ -45,14 +45,13 @@ export const generateAtomicClassNames = (
 				}
 
 				if (specialProperty.toLowerCase().endsWith("select")) {
-					if (special?.selector)
-						throw new Error("Nested selectors are not supported");
 					let selectorType = specialProperty
 						.toLowerCase()
 						.replace("select", "");
 					selectorType = selectorType ? selectorType : "self";
 					return Object.entries(value).flatMap(([selector, styles]) => {
 						const selectorObj = {
+							...special?.selector,
 							[selectorType]: selector,
 						};
 						return generateAtomicClassNames(
@@ -212,34 +211,17 @@ const insertSelector = (
 	config: GenericConfig
 ) => {
 	if (!special.selector) throw new Error("Invalid selector object");
+	let buildClass = `.${className}`;
 	if (special.selector.self) {
-		return insertRule(
-			element,
-			`.${className}${special.selector.self}`,
-			key,
-			value,
-			config
-		);
+		buildClass += special.selector.self;
 	}
 	if (special.selector.parent) {
-		return insertRule(
-			element,
-			`${special.selector.parent} > .${className}`,
-			key,
-			value,
-			config
-		);
+		buildClass = `${special.selector.parent} > ${buildClass}`;
 	}
 	if (special.selector.ancestor) {
-		return insertRule(
-			element,
-			`${special.selector.ancestor} .${className}`,
-			key,
-			value,
-			config
-		);
+		buildClass = `${special.selector.ancestor} ${buildClass}`;
 	}
-	throw new Error("Invalid selector object");
+	return insertRule(element, buildClass, key, value, config);
 };
 
 const insertRule = (

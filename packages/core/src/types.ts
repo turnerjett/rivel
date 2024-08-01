@@ -39,12 +39,39 @@ export type MapShorthands<T> = {
 		: never;
 };
 
-type SimplePseudoClasses = Exclude<CSS.SimplePseudos, `::${string}`>;
+type SimplePseudos =
+	| CSS.SimplePseudos
+	| `:${string}:${string}`
+	| `::${string}:${string}`;
+type SimplePseudoClasses = Exclude<SimplePseudos, `::${string}`>;
 
-export type BaseSpecialProperties<S> = MapSpecialProperties<{
-	select: Partial<Record<CSS.SimplePseudos, S>>;
-	parentSelect: Partial<Record<SimplePseudoClasses, S>>;
-	ancestorSelect: Partial<Record<SimplePseudoClasses, S>>;
+export type BaseSpecialProperties<
+	S,
+	O extends string | never = never
+> = MapSpecialProperties<{
+	select: Partial<
+		Record<
+			SimplePseudos,
+			S & Omit<BaseSpecialProperties<S, O | "$select">, O | "$select">
+		>
+	>;
+	parentSelect: Partial<
+		Record<
+			SimplePseudoClasses,
+			S &
+				Omit<BaseSpecialProperties<S, O | "$parentSelect">, O | "$parentSelect">
+		>
+	>;
+	ancestorSelect: Partial<
+		Record<
+			SimplePseudoClasses,
+			S &
+				Omit<
+					BaseSpecialProperties<S, O | "$ancestorSelect">,
+					O | "$ancestorSelect"
+				>
+		>
+	>;
 	dynamic: (vals: {
 		mouse: {
 			global: {
