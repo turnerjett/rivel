@@ -55,23 +55,42 @@ class SharedListeners {
 export const createAccessors = (el: Element) => {
 	const registered = new Map<Record<string, unknown>, () => void>();
 
-	const [store, setStore] = createStore({
+	const [store, setStore] = createStore<{
 		mouse: {
 			global: {
-				pos: { x: 0, y: 0 },
+				pos: { x: number; y: number } | undefined;
+				isDown: boolean;
+			};
+			local: {
+				pos: { x: number; y: number } | undefined;
+				isDown: boolean;
+			};
+		};
+		scroll: {
+			global: {
+				pos: { x: number; y: number } | undefined;
+			};
+			local: {
+				pos: { x: number; y: number } | undefined;
+			};
+		};
+	}>({
+		mouse: {
+			global: {
+				pos: undefined,
 				isDown: false,
 			},
 			local: {
-				pos: { x: 0, y: 0 },
+				pos: undefined,
 				isDown: false,
 			},
 		},
 		scroll: {
 			global: {
-				pos: { x: 0, y: 0 },
+				pos: undefined,
 			},
 			local: {
-				pos: { x: 0, y: 0 },
+				pos: undefined,
 			},
 		},
 	});
@@ -136,8 +155,7 @@ export const createAccessors = (el: Element) => {
 					{
 						mousemove: {
 							subscriber: (state, e) => {
-								state.mouse.global.pos.x = e.clientX;
-								state.mouse.global.pos.y = e.clientY;
+								state.mouse.global.pos = { x: e.clientX, y: e.clientY };
 							},
 						},
 					},
@@ -194,8 +212,10 @@ export const createAccessors = (el: Element) => {
 					{
 						scroll: {
 							subscriber: (state) => {
-								state.scroll.global.pos.x = window.scrollX;
-								state.scroll.global.pos.y = window.scrollY;
+								state.scroll.global.pos = {
+									x: window.scrollX,
+									y: window.scrollY,
+								};
 							},
 						},
 					},
@@ -207,8 +227,7 @@ export const createAccessors = (el: Element) => {
 					{
 						scroll: {
 							subscriber: (state) => {
-								state.scroll.global.pos.x = el.scrollLeft;
-								state.scroll.global.pos.y = el.scrollTop;
+								state.scroll.global.pos = { x: el.scrollLeft, y: el.scrollTop };
 							},
 							onElement: el,
 						},

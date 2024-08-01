@@ -7,7 +7,7 @@ export default function App() {
 
 const Page = () => {
 	return (
-		<rv.Theme scheme="dark">
+		<rv.Theme scheme="darkAlt">
 			<div
 				use:rv={{
 					h: "100vh",
@@ -22,7 +22,13 @@ const Page = () => {
 			>
 				<rv.Theme elevation={1}>
 					<ButtonGroup />
-					<rv.Theme scheme={(scheme) => (scheme === "dark" ? "light" : "dark")}>
+					<rv.Theme
+						scheme={(scheme) =>
+							scheme.startsWith("light")
+								? (scheme.replace("light", "dark") as typeof scheme)
+								: (scheme.replace("dark", "light") as typeof scheme)
+						}
+					>
 						<ButtonGroup />
 					</rv.Theme>
 				</rv.Theme>
@@ -48,13 +54,16 @@ const ButtonGroup = () => {
 			<rv.Theme name="base">
 				<Button>Button</Button>
 			</rv.Theme>
+			<rv.Theme name="info">
+				<Button>Button</Button>
+			</rv.Theme>
 			<rv.Theme name="success">
 				<Button>Button</Button>
 			</rv.Theme>
 			<rv.Theme name="warning">
 				<Button>Button</Button>
 			</rv.Theme>
-			<rv.Theme name="error">
+			<rv.Theme name="danger">
 				<Button>Button</Button>
 			</rv.Theme>
 		</div>

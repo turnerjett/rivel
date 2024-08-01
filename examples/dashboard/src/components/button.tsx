@@ -29,6 +29,7 @@ export const Button: Component<ComponentProps<"button">> = (props) => {
 						},
 						"::before": {
 							content: "''",
+							op: "var(--opacity)",
 							pos: "absolute",
 							t: 0,
 							l: 0,
@@ -60,8 +61,10 @@ export const Button: Component<ComponentProps<"button">> = (props) => {
 						},
 					},
 					$dynamic: ({ mouse }) => ({
-						"--mouse-x": mouse.local.pos().x,
-						"--mouse-y": mouse.local.pos().y,
+						"--mouse-x": mouse.local.pos()?.x,
+						"--mouse-y": mouse.local.pos()?.y,
+						"--opacity":
+							typeof mouse.local.pos()?.x === "undefined" ? "0" : "1",
 					}),
 				}}
 				{...props}

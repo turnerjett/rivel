@@ -103,7 +103,7 @@ export const defaultConfig = createConfigObject({
 		success: {
 			palette: "green",
 		},
-		error: {
+		danger: {
 			palette: "red",
 		},
 		warning: {

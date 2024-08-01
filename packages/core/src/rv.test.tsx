@@ -202,16 +202,16 @@ test("multiple dynamic components", () => {
 			<div
 				use:rv={{
 					$dynamic: ({ mouse }) => ({
-						"--pos-x": mouse.local.pos().x,
-						"--pos-y": mouse.local.pos().y,
+						"--pos-x": mouse.local.pos()?.x,
+						"--pos-y": mouse.local.pos()?.y,
 					}),
 				}}
 			/>
 			<div
 				use:rv={{
 					$dynamic: ({ mouse }) => ({
-						"--pos-x": mouse.local.pos().x,
-						"--pos-y": mouse.local.pos().y,
+						"--pos-x": mouse.local.pos()?.x,
+						"--pos-y": mouse.local.pos()?.y,
 					}),
 				}}
 			/>

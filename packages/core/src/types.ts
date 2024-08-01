@@ -6,7 +6,7 @@ export type CSSProperties = CSS.StandardProperties<
 >;
 export type CSSPropertyKeys = keyof CSSProperties;
 
-export type Vars = Record<`--${string}`, string | number>;
+export type Vars = Record<`--${string}`, string | number | undefined>;
 export type Styles = CSSProperties & Vars;
 export type StyleKeys = keyof Styles;
 
@@ -64,20 +64,20 @@ export type BaseSpecialProperties<S> = MapSpecialProperties<{
 	dynamic: (vals: {
 		mouse: {
 			global: {
-				pos: () => { x: number; y: number };
+				pos: () => { x: number; y: number } | undefined;
 				isDown: () => boolean;
 			};
 			local: {
-				pos: () => { x: number; y: number };
+				pos: () => { x: number; y: number } | undefined;
 				isDown: () => boolean;
 			};
 		};
 		scroll: {
 			global: {
-				pos: () => { x: number; y: number };
+				pos: () => { x: number; y: number } | undefined;
 			};
 			local: {
-				pos: () => { x: number; y: number };
+				pos: () => { x: number; y: number } | undefined;
 			};
 		};
 	}) => S;
