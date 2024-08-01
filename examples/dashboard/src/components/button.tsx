@@ -21,11 +21,12 @@ export const Button: Component<ComponentProps<"button">> = (props) => {
 					$select: {
 						":hover": {
 							bg: rv.colors().border.hover,
-							boxShadow: `0 3px 8px -2px ${rv.colors().background.hover}`,
+							boxShadow:
+								"0 3px 6px -2px rgb(0, 0, 0, 0.1), 0 2px 4px 0 rgb(0, 0, 0, 0.1)",
 						},
 						":active": {
 							bg: rv.colors().border.active,
-							boxShadow: `0 2px 4px -2px ${rv.colors().background.active}`,
+							boxShadow: "0 2px 4px -2px rgb(0, 0, 0, 0.2)",
 						},
 						"::before": {
 							content: "''",
@@ -64,7 +65,10 @@ export const Button: Component<ComponentProps<"button">> = (props) => {
 						"--mouse-x": mouse.local.pos()?.x,
 						"--mouse-y": mouse.local.pos()?.y,
 						"--opacity":
-							typeof mouse.local.pos()?.x === "undefined" ? "0" : "1",
+							typeof mouse.local.pos()?.x === "undefined" ||
+							typeof mouse.local.pos()?.y === "undefined"
+								? "0"
+								: "1",
 					}),
 				}}
 				{...props}

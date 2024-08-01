@@ -1,5 +1,6 @@
 import { rv } from "../rivel.config";
 import { Button } from "./components/button";
+import { invert } from "@rivel/utils";
 
 export default function App() {
 	return <Page />;
@@ -22,13 +23,7 @@ const Page = () => {
 			>
 				<rv.Theme elevation={1}>
 					<ButtonGroup />
-					<rv.Theme
-						scheme={(scheme) =>
-							scheme.startsWith("light")
-								? (scheme.replace("light", "dark") as typeof scheme)
-								: (scheme.replace("dark", "light") as typeof scheme)
-						}
-					>
+					<rv.Theme scheme={(scheme) => invert(scheme)}>
 						<ButtonGroup />
 					</rv.Theme>
 				</rv.Theme>

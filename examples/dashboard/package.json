@@ -10,6 +10,7 @@
 	},
 	"dependencies": {
 		"@rivel/core": "*",
+		"@rivel/utils": "*",
 		"solid-js": "^1.8.17"
 	},
 	"devDependencies": {
