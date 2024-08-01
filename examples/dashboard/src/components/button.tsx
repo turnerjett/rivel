@@ -1,10 +1,11 @@
+import { get, Theme } from "@rivel/core";
 import { rv } from "../../rivel.config";
 import type { Component, ComponentProps, JSXElement } from "solid-js";
 
 export const Button: Component<ComponentProps<"button">> = (props) => {
 	const borderWidth = 1;
 	return (
-		<rv.Theme elevation={(surface) => surface + 2}>
+		<Theme elevation={(surface) => surface + 2}>
 			<button
 				type="button"
 				use:rv={{
@@ -75,6 +76,6 @@ export const Button: Component<ComponentProps<"button">> = (props) => {
 			>
 				<span use:rv={{ pos: "relative", zi: "1" }}>{props.children}</span>
 			</button>
-		</rv.Theme>
+		</Theme>
 	);
 };

@@ -1,43 +1,51 @@
-import { type JSX, useContext, type Context, type Accessor } from "solid-js";
-import type { GenericConfig } from "./config";
+import { type JSX, useContext, type Accessor, createContext } from "solid-js";
+import type { RivelConfig } from "./config";
+import { useRivel } from "./root-provider";
 
-export const themeProviderFromContext =
-	<C extends GenericConfig>(
-		context: Context<{
-			scheme: Accessor<keyof C["palettes"]>;
-			theme: Accessor<keyof C["themes"]>;
-			elevation: Accessor<number>;
-		}>
-	) =>
-	(props: {
-		name?:
-			| keyof C["themes"]
-			| ((theme: keyof C["themes"]) => keyof C["themes"]);
-		scheme?:
-			| keyof C["palettes"]
-			| ((scheme: keyof C["palettes"]) => keyof C["palettes"]);
-		elevation?: number | ((surface: number) => number);
-		children: JSX.Element;
-	}) => {
-		const parentContext = useContext(context);
-		return (
-			<context.Provider
-				value={{
-					scheme: () =>
-						typeof props.scheme === "function"
-							? props.scheme(parentContext?.scheme())
-							: props.scheme || parentContext?.scheme(),
-					theme: () =>
-						typeof props.name === "function"
-							? props.name(parentContext?.theme())
-							: props.name || parentContext?.theme(),
-					elevation: () =>
-						typeof props.elevation === "function"
-							? props.elevation(parentContext?.elevation() || 0)
-							: props.elevation || parentContext?.elevation(),
-				}}
-			>
-				{props.children}
-			</context.Provider>
-		);
-	};
+type Schemes = keyof RivelConfig["palettes"];
+type Themes = keyof RivelConfig["themes"];
+const ThemeContext = createContext<{
+	scheme: Accessor<Schemes>;
+	theme: Accessor<Themes>;
+	elevation: Accessor<number>;
+}>();
+export const useTheme = () => useContext(ThemeContext);
+
+export const Theme = (props: {
+	name?:
+		| keyof RivelConfig["themes"]
+		| ((theme: keyof RivelConfig["themes"]) => keyof RivelConfig["themes"]);
+	scheme?:
+		| keyof RivelConfig["palettes"]
+		| ((
+				scheme: keyof RivelConfig["palettes"]
+		  ) => keyof RivelConfig["palettes"]);
+	elevation?: number | ((surface: number) => number);
+	children: JSX.Element;
+}) => {
+	const parentContext = useTheme();
+	const root = useRivel();
+	const schemeFallback = parentContext?.scheme() || root.default.scheme;
+	const themeFallback = parentContext?.theme() || root.default.theme;
+	const elevationFallback = parentContext?.elevation() || 0;
+	return (
+		<ThemeContext.Provider
+			value={{
+				scheme: () =>
+					typeof props.scheme === "function"
+						? props.scheme(schemeFallback)
+						: props.scheme || schemeFallback,
+				theme: () =>
+					typeof props.name === "function"
+						? props.name(themeFallback)
+						: props.name || themeFallback,
+				elevation: () =>
+					typeof props.elevation === "function"
+						? props.elevation(elevationFallback)
+						: props.elevation || elevationFallback,
+			}}
+		>
+			{props.children}
+		</ThemeContext.Provider>
+	);
+};

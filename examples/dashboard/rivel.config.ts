@@ -1,12 +1,9 @@
 import { createConfig, type RVDirective } from "@rivel/core";
 import { defaultConfig } from "@rivel/config";
 
-export const { rv } = createConfig(defaultConfig);
+export const { rv, config } = createConfig(defaultConfig);
 
-declare module "solid-js" {
-	namespace JSX {
-		interface Directives {
-			rv: RVDirective<typeof rv>;
-		}
-	}
+type CustomRivelConfig = typeof config;
+declare module "@rivel/core" {
+	export interface RivelConfig extends CustomRivelConfig {}
 }

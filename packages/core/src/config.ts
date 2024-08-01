@@ -5,10 +5,11 @@ import type {
 	MapShorthands,
 	SpecialProperties,
 } from "./types";
-import { themeProviderFromContext } from "./theme";
+import { useTheme } from "./theme";
 import { generateStyleSheets } from "./css";
 import { withElevation, withStaticProperties } from "./utils";
 import { rvStylesWithConfig } from "./rv";
+import { useRivel } from "./root-provider";
 
 export type Palettes<SK extends string, PK extends string> = {
 	[key in SK]: {
@@ -32,7 +33,8 @@ export interface Config<
 	TK extends string,
 	V extends Values,
 	SH extends CSSPropertyShorthands | undefined,
-	BP extends Breakpoints | undefined
+	BP extends Breakpoints | undefined,
+	RV = unknown
 > {
 	palettes: Palettes<SK, PK>;
 	themes: Themes<TK, NoInfer<PK>>;
@@ -43,6 +45,7 @@ export interface Config<
 		cssSizeUnit?: "rem" | "px";
 		cssTimeUnit?: "s" | "ms";
 	};
+	RVDirective?: RV;
 }
 
 export type GenericConfig = Config<
@@ -82,25 +85,22 @@ export const createConfig = <
 		throw new Error("Config must specify at least one scheme and palette");
 	}
 
-	const ThemeContext = createContext<{
-		scheme: Accessor<SK>;
-		theme: Accessor<TK>;
-		elevation: Accessor<number>;
-	}>({
-		scheme: () => defaultScheme,
-		theme: () => defaultTheme,
-		elevation: () => 0,
-	});
-
 	const values = Object.keys(config.values({ palette: [] })).reduce(
 		(acc, key) => {
 			Object.assign(acc, {
 				[key]: () => {
-					const { scheme, theme } = useContext(ThemeContext);
-					const themePalette = config.themes[theme()].palette;
+					const root = useRivel();
+					const themeContext = useTheme();
+					const theme = themeContext?.theme() ?? root.default.theme;
+					const scheme = themeContext?.scheme() ?? root.default.scheme;
+					const elevation = themeContext?.elevation() ?? 0;
+					const themePalette =
+						config.themes[theme as keyof typeof config.themes].palette;
 					const palette = withElevation(
-						config.palettes[scheme()][themePalette],
-						useContext(ThemeContext).elevation()
+						config.palettes[scheme as keyof typeof config.palettes][
+							themePalette
+						],
+						elevation
 					);
 					return config.values({
 						palette,
@@ -130,16 +130,26 @@ export const createConfig = <
 	type MergedStyles = SH extends undefined
 		? Styles
 		: Styles & MapShorthands<SH>;
+	type AllProperties = MergedStyles & SpecialProperties<MergedStyles, BP>;
 
 	const rv = withStaticProperties(
-		(
-			el: Element,
-			styles: Accessor<MergedStyles & SpecialProperties<MergedStyles, BP>>
-		) => rvStylesWithConfig<MergedStyles, BP>(el, styles, config),
+		(el: Element, styles: Accessor<AllProperties>) =>
+			rvStylesWithConfig<MergedStyles, BP>(el, styles, config),
 		{
 			...values,
-			Theme: themeProviderFromContext<typeof config>(ThemeContext),
 		}
 	);
-	return { config, rv };
+	const conf = config as Config<SK, PK, TK, V, SH, BP, AllProperties>;
+	return { config: conf, rv };
 };
+
+// biome-ignore lint/suspicious/noEmptyInterface: overriden by declare module
+export interface RivelConfig {}
+
+declare module "solid-js" {
+	namespace JSX {
+		interface Directives {
+			rv: RivelConfig["RVDirective"];
+		}
+	}
+}
