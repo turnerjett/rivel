@@ -1,0 +1,13 @@
+{
+	"extends": "@rivel/typescript-config/rivel.json",
+	"compilerOptions": {
+		"rootDir": "src",
+		"outDir": "dist",
+		"types": ["vitest/importMeta", "vite/client", "@testing-library/jest-dom"],
+		"paths": {
+			"@core/*": ["../core/src/*"]
+		}
+	},
+	"include": ["src"],
+	"exclude": ["node_modules", "dist"]
+}

@@ -1,19 +1,17 @@
 import { test, expect, beforeEach, vi } from "vitest";
-import { render } from "@solidjs/testing-library";
+import { render as baseRender } from "@solidjs/testing-library";
 import userEvent from "@testing-library/user-event";
 import { createSignal } from "solid-js";
-import { createConfig } from "./config";
-import { defaultConfig } from "@rivel/config";
-import { styleCache } from "./css";
-import type { RVDirective } from "./types";
+import { rv, RivelProvider } from "@rivel/core";
+import { config } from "./test-config";
+import { styleCache } from "@core/css";
 
-const { rv, config } = createConfig(defaultConfig);
-
-type CustomConfig = typeof config;
-
-declare module "@rivel/core" {
-	interface RivelConfig extends CustomConfig {}
-}
+const render: typeof baseRender = (ui, options) => {
+	return baseRender(
+		() => <RivelProvider config={config}>{ui()}</RivelProvider>,
+		options
+	);
+};
 
 beforeEach(() => {
 	styleCache.clear();
@@ -31,7 +29,7 @@ test("style element", () => {
 });
 
 test("update element styles", () => {
-	const [styles, setStyles] = createSignal<RVDirective<typeof rv>>({
+	const [styles, setStyles] = createSignal({
 		bg: "red",
 	});
 
@@ -44,7 +42,7 @@ test("update element styles", () => {
 });
 
 test("delete styles from style sheet", () => {
-	const [styles, setStyles] = createSignal<RVDirective<typeof rv>>({
+	const [styles, setStyles] = createSignal({
 		bg: "red",
 	});
 
@@ -166,7 +164,7 @@ test("add dynamic styles", async () => {
 });
 
 test("update dynamic styles", async () => {
-	const [styles, setStyles] = createSignal<RVDirective<typeof rv>>({
+	const [styles, setStyles] = createSignal({
 		$dynamic: () => ({ backgroundColor: "red" }),
 	});
 	const { container } = render(() => <div use:rv={styles()} />);
@@ -178,12 +176,13 @@ test("update dynamic styles", async () => {
 });
 
 test("update unrelated dynamic styles", async () => {
-	const [styles, setStyles] = createSignal<RVDirective<typeof rv>>({
+	const [styles, setStyles] = createSignal({
 		$dynamic: () => ({ backgroundColor: "red" }),
 	});
 	const { container } = render(() => <div use:rv={styles()} />);
 	expect(container.firstChild).toHaveStyle("background-color: rgb(255, 0, 0)");
 	setStyles({
+		// @ts-expect-error
 		$dynamic: () => ({ display: "none" }),
 	});
 	expect(container.firstChild).toHaveStyle("display: none");
