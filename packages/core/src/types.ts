@@ -1,4 +1,5 @@
 import type * as CSS from "csstype";
+import type { RivelInternalConfig } from "./config";
 
 export type CSSProperties = CSS.StandardProperties<
 	string | number,
@@ -96,3 +97,10 @@ export type SpecialProperties<
 export type MapSpecialProperties<S extends Record<string, unknown>> = {
 	[K in keyof S as `$${string & K}`]?: S[K];
 };
+
+export type SchemeName = keyof RivelInternalConfig["palettes"];
+export type Palette = RivelInternalConfig["palettes"][SchemeName];
+export type ThemeName = keyof RivelInternalConfig["themes"];
+export type Theme = RivelInternalConfig["themes"][ThemeName];
+export type Values = ReturnType<RivelInternalConfig["values"]>;
+export type RVProperties = RivelInternalConfig["RVDirective"];

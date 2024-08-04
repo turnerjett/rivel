@@ -1,9 +1,9 @@
-import type { Breakpoints, GenericConfig } from "./config";
+import type { ConfigBreakpoints, GenericConfig } from "./config";
 import type { StyleKeys, Styles, SpecialProperties } from "./types";
 import { toKebabCase } from "./utils";
 
 type StylesWithSpecialProperties = Styles &
-	SpecialProperties<Styles, Breakpoints>;
+	SpecialProperties<Styles, ConfigBreakpoints>;
 
 interface SpecialArgs {
 	breakpoint?: string;

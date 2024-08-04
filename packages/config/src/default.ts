@@ -1,8 +1,8 @@
 import type {
-	Breakpoints,
+	ConfigBreakpoints,
 	CSSPropertyShorthands,
 	Config,
-	Values,
+	ConfigValues,
 } from "@rivel/core";
 import { baseShorthands } from "./shorthands";
 import {
@@ -44,9 +44,9 @@ export const createConfigObject = <
 	SK extends string,
 	PK extends string,
 	TK extends string,
-	V extends Values,
+	V extends ConfigValues,
 	SH extends CSSPropertyShorthands | undefined,
-	BP extends Breakpoints | undefined
+	BP extends ConfigBreakpoints | undefined
 >(
 	config: Config<SK, PK, TK, V, SH, BP>
 ) => {

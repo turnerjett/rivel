@@ -1,11 +1,11 @@
 import { type Accessor, createRenderEffect } from "solid-js";
-import type { Breakpoints, GenericConfig } from "./config";
+import type { ConfigBreakpoints, GenericConfig } from "./config";
 import type { SpecialProperties, Styles } from "./types";
 import { generateAtomicClassNames, removeClasses } from "./css";
 import { updateStyles } from "./dynamic";
 import { useRivel } from "./root-provider";
 
-export const rv = <S extends Styles, BP extends Breakpoints | undefined>(
+export const rv = <S extends Styles, BP extends ConfigBreakpoints | undefined>(
 	el: Element,
 	styles: Accessor<S & SpecialProperties<S, BP>>
 ) => {
@@ -17,7 +17,10 @@ export const rv = <S extends Styles, BP extends Breakpoints | undefined>(
 	});
 };
 
-const updateClasses = <S extends Styles, BP extends Breakpoints | undefined>(
+const updateClasses = <
+	S extends Styles,
+	BP extends ConfigBreakpoints | undefined
+>(
 	el: Element,
 	styles: Accessor<S & SpecialProperties<S, BP>>,
 	config: GenericConfig

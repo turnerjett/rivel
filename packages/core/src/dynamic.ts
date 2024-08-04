@@ -1,5 +1,5 @@
 import { type Accessor, createRenderEffect } from "solid-js";
-import type { Breakpoints, GenericConfig } from "./config";
+import type { ConfigBreakpoints, GenericConfig } from "./config";
 import { timeRelatedProperties } from "./css";
 import type { Styles, SpecialProperties, StyleKeys } from "./types";
 import { toKebabCase } from "./utils";
@@ -7,7 +7,7 @@ import { createAccessors } from "./dynamic-accessors";
 
 export const updateStyles = <
 	S extends Styles,
-	BP extends Breakpoints | undefined
+	BP extends ConfigBreakpoints | undefined
 >(
 	el: Element,
 	styles: Accessor<S & SpecialProperties<S, BP>>,

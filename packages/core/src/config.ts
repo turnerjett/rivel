@@ -6,33 +6,33 @@ import type {
 } from "./types";
 import { generateStyleSheets } from "./css";
 
-export type Palettes<SK extends string, PK extends string> = {
+export type ConfigPalettes<SK extends string, PK extends string> = {
 	[key in SK]: {
 		[key in PK]: string[];
 	};
 };
 
-export type Themes<TK extends string, PK extends string> = {
+export type ConfigThemes<TK extends string, PK extends string> = {
 	[key in TK]: {
 		palette: PK;
 	};
 };
 
-export type Values = Record<string, unknown>;
+export type ConfigValues = Record<string, unknown>;
 
-export type Breakpoints = Record<string, number>;
+export type ConfigBreakpoints = Record<string, number>;
 
 export interface Config<
 	SK extends string,
 	PK extends string,
 	TK extends string,
-	V extends Values,
+	V extends ConfigValues,
 	SH extends CSSPropertyShorthands | undefined,
-	BP extends Breakpoints | undefined,
+	BP extends ConfigBreakpoints | undefined,
 	RV = unknown
 > {
-	palettes: Palettes<SK, PK>;
-	themes: Themes<TK, NoInfer<PK>>;
+	palettes: ConfigPalettes<SK, PK>;
+	themes: ConfigThemes<TK, NoInfer<PK>>;
 	values: (theme: { palette: string[] }) => V;
 	shorthands?: SH;
 	breakpoints?: BP;
@@ -49,16 +49,16 @@ export type GenericConfig = Config<
 	string,
 	Record<string, unknown>,
 	CSSPropertyShorthands,
-	Breakpoints
+	ConfigBreakpoints
 >;
 
 export const createConfig = <
 	SK extends string,
 	PK extends string,
 	TK extends string,
-	V extends Values,
+	V extends ConfigValues,
 	SH extends CSSPropertyShorthands | undefined,
-	BP extends Breakpoints | undefined
+	BP extends ConfigBreakpoints | undefined
 >(
 	config: Config<SK, PK, TK, V, SH, BP>
 ) => {

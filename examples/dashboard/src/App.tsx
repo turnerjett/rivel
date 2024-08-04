@@ -1,4 +1,9 @@
-import { RivelProvider, Theme } from "@rivel/core";
+import {
+	RivelProvider,
+	type SchemeName,
+	Theme,
+	type ThemeName,
+} from "@rivel/core";
 import { config } from "../rivel.config";
 import { Button } from "./components/button";
 import { invert } from "@rivel/utils";
@@ -9,10 +14,16 @@ export default function App() {
 	return <Page />;
 }
 const Page = () => {
-	const [scheme, setScheme] = createSignal<"lightAlt" | "darkAlt">("darkAlt");
-	const [theme, setTheme] = createSignal<"base" | "blue">("base");
+	const [scheme, setScheme] = createSignal<SchemeName>("darkAlt");
+	const [theme, setTheme] = createSignal<ThemeName>("base");
 	const toggleScheme = () => setScheme(invert(scheme()));
-	const toggleTheme = () => setTheme(theme() === "base" ? "blue" : "base");
+	const themes: ThemeName[] = ["base", "info", "success", "warning", "danger"];
+	const cycleThemes = () => {
+		const currentIndex = themes.indexOf(theme());
+		const nextIndex = (currentIndex + 1) % themes.length;
+		// biome-ignore lint/style/noNonNullAssertion: this will never be undefined
+		setTheme(themes[nextIndex]!);
+	};
 	return (
 		<RivelProvider config={config}>
 			<Theme scheme={scheme()} name={theme()}>
@@ -35,7 +46,7 @@ const Page = () => {
 						</Theme>
 					</Theme>
 					<Button onClick={toggleScheme}>Toggle Scheme</Button>
-					<Button onClick={toggleTheme}>Toggle Theme</Button>
+					<Button onClick={cycleThemes}>Cycle Themes</Button>
 				</div>
 			</Theme>
 		</RivelProvider>
