@@ -1,49 +1,43 @@
 import {
+	type Accessor,
 	type Component,
 	type JSXElement,
 	createContext,
 	useContext,
 } from "solid-js";
-import type { GenericConfig, RivelConfig } from "./config";
+import type { RivelInternalConfig } from "./config";
 
 interface RivelContext {
-	config: RivelConfig;
+	config: Accessor<RivelInternalConfig>;
 	default: {
-		theme: keyof RivelConfig["themes"];
-		scheme: keyof RivelConfig["palettes"];
+		theme: Accessor<keyof RivelInternalConfig["themes"]>;
+		scheme: Accessor<keyof RivelInternalConfig["palettes"]>;
 	};
 }
 
 const RivelContext = createContext<RivelContext>();
-export const useRivel = () =>
-	useContext(RivelContext) as {
-		config: RivelConfig;
-		default: {
-			theme: keyof RivelConfig["themes"];
-			scheme: keyof RivelConfig["palettes"];
-		};
-	};
+export const useRivel = () => useContext(RivelContext);
 
 export const RivelProvider: Component<{
-	config: RivelConfig;
+	config: RivelInternalConfig;
 	children: JSXElement;
 }> = (props) => {
-	const defaultTheme = Object.keys(
-		props.config.themes
-	)[0] as keyof RivelConfig["themes"];
+	const defaultTheme = () =>
+		Object.keys(props.config.themes)[0] as keyof RivelInternalConfig["themes"];
 	if (!defaultTheme) {
 		throw new Error("Config must specify at least one theme");
 	}
-	const defaultScheme = Object.keys(
-		props.config.palettes
-	)[0] as keyof RivelConfig["palettes"];
-	if (!defaultScheme || !props.config.palettes[defaultScheme]) {
+	const defaultScheme = () =>
+		Object.keys(
+			props.config.palettes
+		)[0] as keyof RivelInternalConfig["palettes"];
+	if (!defaultScheme() || !props.config.palettes[defaultScheme()]) {
 		throw new Error("Config must specify at least one scheme and palette");
 	}
 	return (
 		<RivelContext.Provider
 			value={{
-				config: props.config,
+				config: () => props.config,
 				default: {
 					theme: defaultTheme,
 					scheme: defaultScheme,

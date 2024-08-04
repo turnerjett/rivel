@@ -1,5 +1,4 @@
-import { type Accessor, createRenderEffect, onCleanup } from "solid-js";
-import { createStore, produce } from "solid-js/store";
+import { type Accessor, createRenderEffect } from "solid-js";
 import type { Breakpoints, GenericConfig } from "./config";
 import { timeRelatedProperties } from "./css";
 import type { Styles, SpecialProperties, StyleKeys } from "./types";

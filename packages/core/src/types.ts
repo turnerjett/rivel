@@ -96,7 +96,3 @@ export type SpecialProperties<
 export type MapSpecialProperties<S extends Record<string, unknown>> = {
 	[K in keyof S as `$${string & K}`]?: S[K];
 };
-
-type GetSecondArg<T> = T extends (...args: infer P) => unknown ? P[1] : never;
-type GetAccessorType<T> = T extends (...args: unknown[]) => infer P ? P : never;
-export type RVDirective<RV> = GetAccessorType<GetSecondArg<RV>>;

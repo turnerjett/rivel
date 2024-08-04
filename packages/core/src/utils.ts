@@ -1,14 +1,3 @@
-export const withStaticProperties = <
-	// biome-ignore lint/suspicious/noExplicitAny: Type will be inferred
-	T extends (...args: any[]) => any,
-	P extends Record<string, unknown>
->(
-	targetFn: T,
-	staticProperties: P
-) => {
-	return Object.assign(targetFn, staticProperties);
-};
-
 export const withElevation = (palette: string[], elevation: number) => {
 	if (elevation === 0) return palette;
 	if (elevation > 0)
@@ -32,15 +21,6 @@ export const toKebabCase = (str: string) => {
 
 if (import.meta.vitest) {
 	const { test, expect } = import.meta.vitest;
-
-	test("adds static properties", () => {
-		const fn = () => {};
-		const properties = {
-			foo: "bar",
-		};
-		const result = withStaticProperties(fn, properties);
-		expect(result.foo).toEqual("bar");
-	});
 
 	test("positive elevation", () => {
 		const palette = ["#000", "#001", "#002"];

@@ -1,15 +1,10 @@
-import { type Accessor, createContext, useContext } from "solid-js";
 import type {
 	Styles,
 	CSSPropertyShorthands,
 	MapShorthands,
 	SpecialProperties,
 } from "./types";
-import { useTheme } from "./theme";
 import { generateStyleSheets } from "./css";
-import { withElevation, withStaticProperties } from "./utils";
-import { rvStylesWithConfig } from "./rv";
-import { useRivel } from "./root-provider";
 
 export type Palettes<SK extends string, PK extends string> = {
 	[key in SK]: {
@@ -85,35 +80,6 @@ export const createConfig = <
 		throw new Error("Config must specify at least one scheme and palette");
 	}
 
-	const values = Object.keys(config.values({ palette: [] })).reduce(
-		(acc, key) => {
-			Object.assign(acc, {
-				[key]: () => {
-					const root = useRivel();
-					const themeContext = useTheme();
-					const theme = themeContext?.theme() ?? root.default.theme;
-					const scheme = themeContext?.scheme() ?? root.default.scheme;
-					const elevation = themeContext?.elevation() ?? 0;
-					const themePalette =
-						config.themes[theme as keyof typeof config.themes].palette;
-					const palette = withElevation(
-						config.palettes[scheme as keyof typeof config.palettes][
-							themePalette
-						],
-						elevation
-					);
-					return config.values({
-						palette,
-					})[key];
-				},
-			});
-			return acc;
-		},
-		{} as {
-			[key in keyof V]: Accessor<V[key]>;
-		}
-	);
-
 	if (config.breakpoints) {
 		const sorted = Object.entries(config.breakpoints).sort(
 			(a, b) => a[1] - b[1]
@@ -132,24 +98,19 @@ export const createConfig = <
 		: Styles & MapShorthands<SH>;
 	type AllProperties = MergedStyles & SpecialProperties<MergedStyles, BP>;
 
-	const rv = withStaticProperties(
-		(el: Element, styles: Accessor<AllProperties>) =>
-			rvStylesWithConfig<MergedStyles, BP>(el, styles, config),
-		{
-			...values,
-		}
-	);
-	const conf = config as Config<SK, PK, TK, V, SH, BP, AllProperties>;
-	return { config: conf, rv };
+	return config as Config<SK, PK, TK, V, SH, BP, AllProperties>;
 };
 
-// biome-ignore lint/suspicious/noEmptyInterface: overriden by declare module
+// biome-ignore lint/suspicious/noEmptyInterface: overridden by declare module
 export interface RivelConfig {}
+export interface RivelInternalConfig
+	extends Omit<GenericConfig, keyof RivelConfig>,
+		RivelConfig {}
 
 declare module "solid-js" {
 	namespace JSX {
 		interface Directives {
-			rv: RivelConfig["RVDirective"];
+			rv: RivelInternalConfig["RVDirective"];
 		}
 	}
 }

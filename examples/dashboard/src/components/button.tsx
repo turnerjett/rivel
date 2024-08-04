@@ -1,6 +1,6 @@
-import { get, Theme } from "@rivel/core";
-import { rv } from "../../rivel.config";
-import type { Component, ComponentProps, JSXElement } from "solid-js";
+import { Theme } from "@rivel/core";
+import type { Component, ComponentProps } from "solid-js";
+import { rv, values } from "@rivel/core";
 
 export const Button: Component<ComponentProps<"button">> = (props) => {
 	const borderWidth = 1;
@@ -9,8 +9,8 @@ export const Button: Component<ComponentProps<"button">> = (props) => {
 			<button
 				type="button"
 				use:rv={{
-					bg: rv.colors().border.default,
-					col: rv.colors().textPrimary,
+					bg: values.colors.border.default,
+					col: values.colors.textPrimary,
 					bw: 0,
 					rd: 0.25,
 					px: 0.75,
@@ -21,12 +21,12 @@ export const Button: Component<ComponentProps<"button">> = (props) => {
 						"box-shadow 0.1s ease-in-out, opacity 0.1s ease-in-out, background-color 0.1s ease-in-out",
 					$select: {
 						":hover": {
-							bg: rv.colors().border.hover,
+							bg: values.colors.border.hover,
 							boxShadow:
 								"0 3px 6px -2px rgb(0, 0, 0, 0.1), 0 2px 4px 0 rgb(0, 0, 0, 0.1)",
 						},
 						":active": {
-							bg: rv.colors().border.active,
+							bg: values.colors.border.active,
 							boxShadow: "0 2px 4px -2px rgb(0, 0, 0, 0.2)",
 						},
 						"::before": {
@@ -37,9 +37,7 @@ export const Button: Component<ComponentProps<"button">> = (props) => {
 							l: 0,
 							w: "200%",
 							aspectRatio: "1",
-							background: `radial-gradient(circle, ${
-								rv.colors().solid.default
-							} 0%, transparent 50%)`,
+							background: `radial-gradient(circle, ${values.colors.solid.default} 0%, transparent 50%)`,
 							translate:
 								"calc(-50% + var(--mouse-x)) calc(-50% + var(--mouse-y))",
 							rd: "100%",
@@ -49,14 +47,14 @@ export const Button: Component<ComponentProps<"button">> = (props) => {
 							pos: "absolute",
 							inset: `${borderWidth}px`,
 							rd: `calc(0.25rem - ${borderWidth}px)`,
-							bg: rv.colors().background.default,
+							bg: values.colors.background.default,
 							transition: "background-color 0.2s ease-in-out",
 						},
 						":hover::after": {
-							bg: rv.colors().background.hover,
+							bg: values.colors.background.hover,
 						},
 						":active::after": {
-							bg: rv.colors().background.active,
+							bg: values.colors.background.active,
 						},
 						":active::before": {
 							op: 0,

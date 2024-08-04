@@ -1,16 +1,21 @@
 import { RivelProvider, Theme } from "@rivel/core";
-import { config, rv } from "../rivel.config";
+import { config } from "../rivel.config";
 import { Button } from "./components/button";
 import { invert } from "@rivel/utils";
+import { rv, values } from "@rivel/core";
+import { createSignal } from "solid-js";
 
 export default function App() {
 	return <Page />;
 }
-
 const Page = () => {
+	const [scheme, setScheme] = createSignal<"lightAlt" | "darkAlt">("darkAlt");
+	const [theme, setTheme] = createSignal<"base" | "blue">("base");
+	const toggleScheme = () => setScheme(invert(scheme()));
+	const toggleTheme = () => setTheme(theme() === "base" ? "blue" : "base");
 	return (
 		<RivelProvider config={config}>
-			<Theme scheme="darkAlt">
+			<Theme scheme={scheme()} name={theme()}>
 				<div
 					use:rv={{
 						h: "100vh",
@@ -19,7 +24,7 @@ const Page = () => {
 						jc: "center",
 						ai: "center",
 						fd: "column",
-						bg: rv.colors().background.default,
+						bg: values.colors.background.default,
 						gap: 1,
 					}}
 				>
@@ -29,6 +34,8 @@ const Page = () => {
 							<ButtonGroup />
 						</Theme>
 					</Theme>
+					<Button onClick={toggleScheme}>Toggle Scheme</Button>
+					<Button onClick={toggleTheme}>Toggle Theme</Button>
 				</div>
 			</Theme>
 		</RivelProvider>
@@ -44,8 +51,8 @@ const ButtonGroup = () => {
 				p: 1,
 				bs: "solid",
 				bw: "1px",
-				bc: rv.colors().border.default,
-				bg: rv.colors().background.default,
+				bc: values.colors.border.default,
+				bg: values.colors.background.default,
 				rd: 0.5,
 			}}
 		>

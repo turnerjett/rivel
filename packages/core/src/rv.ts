@@ -1,19 +1,20 @@
-import { type Accessor, createRenderEffect, onCleanup } from "solid-js";
+import { type Accessor, createRenderEffect } from "solid-js";
 import type { Breakpoints, GenericConfig } from "./config";
 import type { SpecialProperties, Styles } from "./types";
 import { generateAtomicClassNames, removeClasses } from "./css";
 import { updateStyles } from "./dynamic";
+import { useRivel } from "./root-provider";
 
-export const rvStylesWithConfig = <
-	S extends Styles,
-	BP extends Breakpoints | undefined
->(
+export const rv = <S extends Styles, BP extends Breakpoints | undefined>(
 	el: Element,
-	styles: Accessor<S & SpecialProperties<S, BP>>,
-	config: GenericConfig
+	styles: Accessor<S & SpecialProperties<S, BP>>
 ) => {
-	updateClasses(el, styles, config);
-	updateStyles(el, styles, config);
+	const root = useRivel();
+	createRenderEffect(() => {
+		if (!root) return;
+		updateClasses(el, styles, root.config());
+		updateStyles(el, styles, root.config());
+	});
 };
 
 const updateClasses = <S extends Styles, BP extends Breakpoints | undefined>(
