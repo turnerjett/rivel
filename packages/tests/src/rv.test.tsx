@@ -199,16 +199,16 @@ test("multiple dynamic components", () => {
 			<div
 				use:rv={{
 					$dynamic: ({ mouse }) => ({
-						"--pos-x": mouse.local.pos()?.x,
-						"--pos-y": mouse.local.pos()?.y,
+						"--pos-x": mouse.local.pos?.x,
+						"--pos-y": mouse.local.pos?.y,
 					}),
 				}}
 			/>
 			<div
 				use:rv={{
 					$dynamic: ({ mouse }) => ({
-						"--pos-x": mouse.local.pos()?.x,
-						"--pos-y": mouse.local.pos()?.y,
+						"--pos-x": mouse.local.pos?.x,
+						"--pos-y": mouse.local.pos?.y,
 					}),
 				}}
 			/>
@@ -226,7 +226,7 @@ test("remove event listeners", () => {
 		<div
 			use:rv={{
 				$dynamic: ({ mouse }) => ({
-					bg: mouse.global.isDown() ? "red" : "blue",
+					bg: mouse.global.isDown ? "red" : "blue",
 				}),
 			}}
 		/>
@@ -244,7 +244,7 @@ test("trigger dynamic", async () => {
 		<div
 			use:rv={{
 				$dynamic: ({ mouse }) => ({
-					bg: mouse.global.isDown() ? "red" : "blue",
+					bg: mouse.global.isDown ? "red" : "blue",
 				}),
 			}}
 		/>

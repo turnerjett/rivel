@@ -10,7 +10,7 @@ export const Button: Component<ComponentProps<"button">> = (props) => {
 				type="button"
 				use:rv={{
 					bg: values.colors.border.default,
-					col: values.colors.textPrimary,
+					col: values.colors.text.primary,
 					bw: 0,
 					rd: 0.25,
 					px: 0.75,
@@ -60,15 +60,18 @@ export const Button: Component<ComponentProps<"button">> = (props) => {
 							op: 0,
 						},
 					},
-					$dynamic: ({ mouse }) => ({
-						"--mouse-x": mouse.local.pos()?.x,
-						"--mouse-y": mouse.local.pos()?.y,
-						"--opacity":
-							typeof mouse.local.pos()?.x === "undefined" ||
-							typeof mouse.local.pos()?.y === "undefined"
-								? "0"
-								: "1",
-					}),
+					$dynamic: ({ mouse }) => {
+						console.log(mouse.local.pos);
+						return {
+							"--mouse-x": mouse.local.pos?.x,
+							"--mouse-y": mouse.local.pos?.y,
+							"--opacity":
+								typeof mouse.local.pos?.x === "undefined" ||
+								typeof mouse.local.pos?.y === "undefined"
+									? "0"
+									: "1",
+						};
+					},
 				}}
 				{...props}
 			>

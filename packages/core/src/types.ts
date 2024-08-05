@@ -65,20 +65,20 @@ export type BaseSpecialProperties<S> = MapSpecialProperties<{
 	dynamic: (vals: {
 		mouse: {
 			global: {
-				pos: () => { x: number; y: number } | undefined;
-				isDown: () => boolean;
+				pos: { x: number; y: number } | undefined;
+				isDown: boolean;
 			};
 			local: {
-				pos: () => { x: number; y: number } | undefined;
-				isDown: () => boolean;
+				pos: { x: number; y: number } | undefined;
+				isDown: boolean;
 			};
 		};
 		scroll: {
 			global: {
-				pos: () => { x: number; y: number } | undefined;
+				pos: { x: number; y: number } | undefined;
 			};
 			local: {
-				pos: () => { x: number; y: number } | undefined;
+				pos: { x: number; y: number } | undefined;
 			};
 		};
 	}) => S;

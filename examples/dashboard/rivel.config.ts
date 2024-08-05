@@ -3,7 +3,7 @@ import { defaultConfig } from "@rivel/config";
 
 export const config = createConfig(defaultConfig);
 
-type CustomRivelConfig = typeof config;
+type RivelCustomConfig = typeof config;
 declare module "@rivel/core" {
-	export interface RivelConfig extends CustomRivelConfig {}
+	export interface RivelConfig extends RivelCustomConfig {}
 }

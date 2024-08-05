@@ -150,7 +150,7 @@ export const createAccessors = (el: Element) => {
 
 	return {
 		mouse: {
-			global: {
+			global: toGetters({
 				pos: createAccessor(
 					{
 						mousemove: {
@@ -176,8 +176,8 @@ export const createAccessors = (el: Element) => {
 					},
 					() => store.mouse.global.isDown
 				),
-			},
-			local: {
+			}),
+			local: toGetters({
 				pos: createAccessor(
 					{
 						mousemove: {
@@ -204,10 +204,10 @@ export const createAccessors = (el: Element) => {
 					},
 					() => store.mouse.local.isDown
 				),
-			},
+			}),
 		},
 		scroll: {
-			global: {
+			global: toGetters({
 				pos: createAccessor(
 					{
 						scroll: {
@@ -221,8 +221,8 @@ export const createAccessors = (el: Element) => {
 					},
 					() => store.scroll.global.pos
 				),
-			},
-			local: {
+			}),
+			local: toGetters({
 				pos: createAccessor(
 					{
 						scroll: {
@@ -234,7 +234,7 @@ export const createAccessors = (el: Element) => {
 					},
 					() => store.scroll.global.pos
 				),
-			},
+			}),
 		},
 	};
 };
@@ -245,4 +245,18 @@ const calculateLocalMousePos = (
 ) => {
 	const rect = el.getBoundingClientRect();
 	return { x: globalMousePos.x - rect.left, y: globalMousePos.y - rect.top };
+};
+
+const toGetters = <T extends Record<string, () => unknown>>(obj: T) => {
+	const getters = {} as {
+		[K in keyof T]: T[K] extends () => unknown ? ReturnType<T[K]> : never;
+	};
+
+	for (const [key, value] of Object.entries(obj)) {
+		Object.defineProperty(getters, key, {
+			get: value,
+		});
+	}
+
+	return getters;
 };

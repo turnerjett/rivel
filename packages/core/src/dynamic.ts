@@ -20,9 +20,7 @@ export const updateStyles = <
 	createRenderEffect(() => {
 		const s = styles();
 		if (typeof s.$dynamic === "function") {
-			const dynamicStyles = s.$dynamic({
-				...accessors,
-			});
+			const dynamicStyles = s.$dynamic(accessors);
 			const newKeys = updateElementStyles(
 				el as HTMLElement,
 				dynamicStyles,

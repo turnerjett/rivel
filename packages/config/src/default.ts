@@ -156,8 +156,10 @@ export const defaultConfig = createConfigObject({
 				hover: palette[11],
 				active: palette[9],
 			},
-			textSecondary: palette[10],
-			textPrimary: palette[11],
+			text: {
+				secondary: palette[10],
+				primary: palette[11],
+			},
 		},
 	}),
 	shorthands: baseShorthands,
