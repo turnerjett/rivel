@@ -47,21 +47,14 @@ type SimplePseudos =
 type SimplePseudoClasses = Exclude<SimplePseudos, `::${string}`>;
 
 export type BaseSpecialProperties<S> = MapSpecialProperties<{
-	select: Partial<
-		Record<SimplePseudos, S & Omit<BaseSpecialProperties<S>, "$select">>
-	>;
+	select: Partial<Record<SimplePseudos, S & BaseSpecialProperties<S>>>;
 	parentSelect: Partial<
-		Record<
-			SimplePseudoClasses,
-			S & Omit<BaseSpecialProperties<S>, "$parentSelect">
-		>
+		Record<SimplePseudoClasses, S & BaseSpecialProperties<S>>
 	>;
 	ancestorSelect: Partial<
-		Record<
-			SimplePseudoClasses,
-			S & Omit<BaseSpecialProperties<S>, "$ancestorSelect">
-		>
+		Record<SimplePseudoClasses, S & BaseSpecialProperties<S>>
 	>;
+	raw: string | string[];
 	dynamic: (vals: {
 		mouse: {
 			global: {

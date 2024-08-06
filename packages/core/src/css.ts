@@ -50,12 +50,16 @@ export const generateAtomicClassNames = (
 						.toLowerCase()
 						.replace("select", "");
 					selectorType = selectorType ? selectorType : "self";
+					const prevSelector =
+						special?.selector?.[selectorType as keyof typeof special.selector];
 					return Object.entries(value)
 						.reverse()
 						.flatMap(([selector, styles]) => {
 							const selectorObj = {
 								...special?.selector,
-								[selectorType]: selector,
+								[selectorType]: prevSelector
+									? `${prevSelector}${selector}`
+									: selector,
 							};
 							return generateAtomicClassNames(
 								styles as StylesWithSpecialProperties,
@@ -87,36 +91,21 @@ const buildClassName = (
 	const hashedBreakpoint = special?.breakpoint
 		? hashString(special.breakpoint, 2)
 		: null;
-	const hashedSelector = special?.selector
-		? hashString(
-				special.selector.self ||
-					special.selector.parent ||
-					special.selector.ancestor ||
-					// At least one should be present
-					"",
-				2
-		  )
-		: null;
+	const hashedSelector = Object.entries(special?.selector || {})
+		.sort((a, b) => a[0].localeCompare(b[0]))
+		.map(([selector, value]) => hashString(`${selector}-${value}`, 2))
+		.join("-");
 	const hashedKey = hashString(key, 4);
 	const hashedValue = hashString(value.toString(), 4);
 
-	const selectorType = special?.selector?.parent
-		? "parent"
-		: special?.selector?.ancestor
-		? "ancestor"
-		: "self";
-	const updatedSelectorHash = hashString(
-		`${selectorType}-${hashedSelector}`,
-		4
-	);
 	if (hashedBreakpoint && hashedSelector) {
-		return `_${hashedBreakpoint}-${updatedSelectorHash}-${hashedKey}-${hashedValue}`;
+		return `_${hashedBreakpoint}-${hashedSelector}-${hashedKey}-${hashedValue}`;
 	}
 	if (hashedBreakpoint) {
 		return `_${hashedBreakpoint}-${hashedKey}-${hashedValue}`;
 	}
 	if (hashedSelector) {
-		return `_${updatedSelectorHash}-${hashedKey}-${hashedValue}`;
+		return `_${hashedSelector}-${hashedKey}-${hashedValue}`;
 	}
 	return `_${hashedKey}-${hashedValue}`;
 };
