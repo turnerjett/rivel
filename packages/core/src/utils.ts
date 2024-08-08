@@ -19,6 +19,20 @@ export const toKebabCase = (str: string) => {
 	return str.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
 };
 
+export const toGetters = <T extends Record<string, () => unknown>>(obj: T) => {
+	const getters = {} as {
+		[K in keyof T]: T[K] extends () => unknown ? ReturnType<T[K]> : never;
+	};
+
+	for (const [key, value] of Object.entries(obj)) {
+		Object.defineProperty(getters, key, {
+			get: value,
+		});
+	}
+
+	return getters;
+};
+
 if (import.meta.vitest) {
 	const { test, expect } = import.meta.vitest;
 

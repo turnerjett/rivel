@@ -1,3 +1,4 @@
+import { timeRelatedProperties, withoutUnitProperties } from "./constants";
 import type { ConfigBreakpoints, GenericConfig } from "./config";
 import type { StyleKeys, Styles, SpecialProperties } from "./types";
 import { toKebabCase } from "./utils";
@@ -33,45 +34,7 @@ export const generateAtomicClassNames = (
 		.reverse()
 		.flatMap(([key, value]) => {
 			if (key.startsWith("$")) {
-				const specialProperty = key.replace("$", "");
-				if (specialProperty === "dynamic") return [];
-
-				if (config.breakpoints && specialProperty in config.breakpoints) {
-					if (special?.breakpoint)
-						throw new Error("Nested breakpoints are not supported");
-					return generateAtomicClassNames(value, exclude, config, {
-						...special,
-						breakpoint: specialProperty,
-					});
-				}
-
-				if (specialProperty.toLowerCase().endsWith("select")) {
-					let selectorType = specialProperty
-						.toLowerCase()
-						.replace("select", "");
-					selectorType = selectorType ? selectorType : "self";
-					const prevSelector =
-						special?.selector?.[selectorType as keyof typeof special.selector];
-					return Object.entries(value)
-						.reverse()
-						.flatMap(([selector, styles]) => {
-							const selectorObj = {
-								...special?.selector,
-								[selectorType]: prevSelector
-									? `${prevSelector}${selector}`
-									: selector,
-							};
-							return generateAtomicClassNames(
-								styles as StylesWithSpecialProperties,
-								exclude,
-								config,
-								{
-									...special,
-									selector: selectorObj,
-								}
-							);
-						});
-				}
+				return handleSpecialProperty(key, value, exclude, config, special);
 			}
 
 			const className = buildClassName(key, value, special);
@@ -81,6 +44,104 @@ export const generateAtomicClassNames = (
 			return className;
 		});
 	return atomicClassNames;
+};
+
+const handleSpecialProperty = (
+	key: string,
+	value: unknown,
+	exclude: string[],
+	config: GenericConfig,
+	special?: SpecialArgs
+): string[] => {
+	const specialProperty = key.replace("$", "");
+	if (specialProperty === "dynamic") return [];
+
+	if (config.breakpoints && specialProperty in config.breakpoints) {
+		if (special?.breakpoint)
+			throw new Error("Nested breakpoints are not supported");
+		return generateAtomicClassNames(
+			value as StylesWithSpecialProperties,
+			exclude,
+			config,
+			{
+				...special,
+				breakpoint: specialProperty,
+			}
+		);
+	}
+
+	if (specialProperty.toLowerCase().endsWith("select")) {
+		let selectorType = specialProperty.toLowerCase().replace("select", "");
+		selectorType = selectorType ? selectorType : "self";
+		const prevSelector =
+			special?.selector?.[selectorType as keyof typeof special.selector];
+		return Object.entries(value as Record<string, unknown>)
+			.reverse()
+			.flatMap(([selector, styles]) => {
+				const selectorObj = {
+					...special?.selector,
+					[selectorType]: prevSelector
+						? `${prevSelector}${selector}`
+						: selector,
+				};
+				return generateAtomicClassNames(
+					styles as StylesWithSpecialProperties,
+					exclude,
+					config,
+					{
+						...special,
+						selector: selectorObj,
+					}
+				);
+			});
+	}
+	if (specialProperty === "raw") {
+		return handleRaw(value as string | string[], exclude);
+	}
+	throw new Error(`Invalid special property: ${key}`);
+};
+
+const handleRaw = (value: string | string[], exclude: string[]) => {
+	const val = typeof value === "string" ? [value] : value;
+	const classes = val.map((v) => `_${hashString(v, 8, true)}`);
+	const replaced = classes.map((cls, index) => {
+		if (exclude.includes(cls)) return;
+		if (styleCache.has(cls)) {
+			const cached = styleCache.get(cls);
+			if (!cached) throw new Error("Invalid class name");
+			if (exclude.includes(cls)) return;
+			cached.references++;
+			return;
+		}
+
+		const v = val[index];
+		if (!v) throw new Error("Invalid raw value");
+		const split = v.split("{");
+		if (split.length > 2)
+			throw new Error(
+				"Raw value strings should only contain a single rule. Use an array of strings instead."
+			);
+		const selector = split[0];
+		if (!selector) throw new Error("Invalid raw value");
+		const newSelector = selector.replace(/&/g, `.${cls}`);
+		return `${newSelector} { ${split[1]}`;
+	});
+
+	const styleElement = document.querySelector(
+		"style[data-rivel]"
+	) as HTMLStyleElement;
+
+	for (const [index, value] of replaced.entries()) {
+		if (!value) continue;
+		styleElement.sheet?.insertRule(value);
+		if (!classes[index]) throw new Error("Invalid class name");
+		styleCache.set(classes[index], {
+			rule: styleElement.sheet?.cssRules[0] as CSSRule,
+			references: 1,
+		});
+	}
+
+	return classes;
 };
 
 const buildClassName = (
@@ -306,42 +367,6 @@ export const generateStyleSheets = (config: GenericConfig) => {
 	}
 };
 
-export const timeRelatedProperties = new Set<StyleKeys>([
-	"animationDelay",
-	"animationDuration",
-	"transitionDelay",
-	"transitionDuration",
-	"animation",
-	"transition",
-	"animationTimingFunction",
-	"transitionTimingFunction",
-]);
-
-export const withoutUnitProperties = new Set<StyleKeys>([
-	"opacity",
-	"flex",
-	"flexGrow",
-	"flexShrink",
-	"order",
-	"zIndex",
-	"aspectRatio",
-	"columns",
-	"fontWeight",
-	"lineHeight",
-	"scale",
-	"rotate",
-	"gridColumn",
-	"gridRow",
-	"gridColumnStart",
-	"gridColumnEnd",
-	"gridRowStart",
-	"gridRowEnd",
-	"columnCount",
-	"orphans",
-	"widows",
-	"tabSize",
-]);
-
 const handleShorthands = (
 	styleKey: string,
 	shorthands: Record<string, unknown> | undefined
@@ -351,7 +376,11 @@ const handleShorthands = (
 	return shorthands[styleKey as keyof typeof shorthands] as string | string[];
 };
 
-const hashString = (str: string, length: number): string => {
+const hashString = (
+	str: string,
+	length: number,
+	minified?: boolean
+): string => {
 	if (import.meta.env.NODE_ENV !== "production") {
 		return debugHash(str);
 	}

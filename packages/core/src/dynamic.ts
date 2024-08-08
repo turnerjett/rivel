@@ -1,6 +1,6 @@
 import { type Accessor, createRenderEffect } from "solid-js";
 import type { ConfigBreakpoints, GenericConfig } from "./config";
-import { timeRelatedProperties } from "./css";
+import { timeRelatedProperties } from "./constants";
 import type { Styles, SpecialProperties, StyleKeys } from "./types";
 import { toKebabCase } from "./utils";
 import { createAccessors } from "./dynamic-accessors";

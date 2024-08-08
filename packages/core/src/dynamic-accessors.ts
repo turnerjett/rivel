@@ -1,5 +1,6 @@
 import { onCleanup } from "solid-js";
 import { createStore, produce } from "solid-js/store";
+import { toGetters } from "./utils";
 
 class SharedListeners {
 	listeners = new Map<
@@ -245,18 +246,4 @@ const calculateLocalMousePos = (
 ) => {
 	const rect = el.getBoundingClientRect();
 	return { x: globalMousePos.x - rect.left, y: globalMousePos.y - rect.top };
-};
-
-const toGetters = <T extends Record<string, () => unknown>>(obj: T) => {
-	const getters = {} as {
-		[K in keyof T]: T[K] extends () => unknown ? ReturnType<T[K]> : never;
-	};
-
-	for (const [key, value] of Object.entries(obj)) {
-		Object.defineProperty(getters, key, {
-			get: value,
-		});
-	}
-
-	return getters;
 };

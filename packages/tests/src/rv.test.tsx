@@ -2,7 +2,7 @@ import { test, expect, beforeEach, vi } from "vitest";
 import { render as baseRender } from "@solidjs/testing-library";
 import userEvent from "@testing-library/user-event";
 import { createSignal } from "solid-js";
-import { rv, RivelProvider } from "@rivel/core";
+import { rv, RivelProvider, RVProperties } from "@rivel/core";
 import { config } from "./test-config";
 import { styleCache } from "@core/css";
 
@@ -260,4 +260,32 @@ test("trigger dynamic", async () => {
 		keys: "[/MouseLeft]",
 	});
 	expect(container.firstChild).toHaveStyle("background-color: rgb(0, 0, 255)");
+});
+
+test("raw css", () => {
+	const [styles, setStyles] = createSignal<RVProperties>({
+		$raw: "& { background-color: red; }",
+	});
+
+	render(() => <div use:rv={styles()} />);
+	expect(styleCache.size).toBe(1);
+
+	setStyles({
+		$raw: [
+			"& { background-color: red; }",
+			"& { flex-direction: column; }",
+			"& { flex: 1; }",
+		],
+	});
+	console.log(styleCache.values());
+	expect(styleCache.size).toBe(3);
+
+	setStyles({
+		$raw: "& { background-color: blue; }",
+	});
+	console.log(styleCache.values());
+	expect(styleCache.size).toBe(1);
+
+	setStyles({ $raw: [] });
+	expect(styleCache.size).toBe(0);
 });
