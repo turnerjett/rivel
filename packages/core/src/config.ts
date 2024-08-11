@@ -29,7 +29,7 @@ export interface Config<
 	V extends ConfigValues,
 	SH extends CSSPropertyShorthands | undefined,
 	BP extends ConfigBreakpoints | undefined,
-	RV = unknown
+	RV = Styles & SpecialProperties<Styles, ConfigBreakpoints>
 > {
 	palettes: ConfigPalettes<SK, PK>;
 	themes: ConfigThemes<TK, NoInfer<PK>>;

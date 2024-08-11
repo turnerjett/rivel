@@ -1,10 +1,7 @@
 import { timeRelatedProperties, withoutUnitProperties } from "./constants";
-import type { ConfigBreakpoints, GenericConfig } from "./config";
-import type { StyleKeys, Styles, SpecialProperties } from "./types";
+import type { GenericConfig } from "./config";
+import type { StyleKeys, RVProperties } from "./types";
 import { toKebabCase } from "./utils";
-
-type StylesWithSpecialProperties = Styles &
-	SpecialProperties<Styles, ConfigBreakpoints>;
 
 interface SpecialArgs {
 	breakpoint?: string;
@@ -25,12 +22,15 @@ export const styleCache = new Map<
 >();
 
 export const generateAtomicClassNames = (
-	styles: StylesWithSpecialProperties,
+	styles: RVProperties,
 	exclude: string[],
 	config: GenericConfig,
 	special?: SpecialArgs
 ) => {
+	if (!styles) throw new Error("Styles must be defined");
 	const atomicClassNames: string[] = Object.entries(styles)
+		// Reversed to respect the specificity of the styles
+		// Rules are inserted at index 0
 		.reverse()
 		.flatMap(([key, value]) => {
 			if (key.startsWith("$")) {
@@ -54,27 +54,25 @@ const handleSpecialProperty = (
 	special?: SpecialArgs
 ): string[] => {
 	const specialProperty = key.replace("$", "");
+	// Dynamic uses direct styles rather than atomic CSS classes
 	if (specialProperty === "dynamic") return [];
 
 	if (config.breakpoints && specialProperty in config.breakpoints) {
 		if (special?.breakpoint)
 			throw new Error("Nested breakpoints are not supported");
-		return generateAtomicClassNames(
-			value as StylesWithSpecialProperties,
-			exclude,
-			config,
-			{
-				...special,
-				breakpoint: specialProperty,
-			}
-		);
+		return generateAtomicClassNames(value as RVProperties, exclude, config, {
+			...special,
+			breakpoint: specialProperty,
+		});
 	}
 
 	if (specialProperty.toLowerCase().endsWith("select")) {
 		let selectorType = specialProperty.toLowerCase().replace("select", "");
 		selectorType = selectorType ? selectorType : "self";
+
 		const prevSelector =
 			special?.selector?.[selectorType as keyof typeof special.selector];
+
 		return Object.entries(value as Record<string, unknown>)
 			.reverse()
 			.flatMap(([selector, styles]) => {
@@ -85,7 +83,7 @@ const handleSpecialProperty = (
 						: selector,
 				};
 				return generateAtomicClassNames(
-					styles as StylesWithSpecialProperties,
+					styles as RVProperties,
 					exclude,
 					config,
 					{
@@ -95,9 +93,11 @@ const handleSpecialProperty = (
 				);
 			});
 	}
+
 	if (specialProperty === "raw") {
 		return handleRaw(value as string | string[], exclude);
 	}
+
 	throw new Error(`Invalid special property: ${key}`);
 };
 

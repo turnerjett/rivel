@@ -2,7 +2,7 @@ import { test, expect, beforeEach, vi } from "vitest";
 import { render as baseRender } from "@solidjs/testing-library";
 import userEvent from "@testing-library/user-event";
 import { createSignal } from "solid-js";
-import { rv, RivelProvider, RVProperties } from "@rivel/core";
+import { rv, RivelProvider, type RVProperties } from "@rivel/core";
 import { config } from "./test-config";
 import { styleCache } from "@core/css";
 
