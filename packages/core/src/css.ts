@@ -1,5 +1,5 @@
 import { timeRelatedProperties, withoutUnitProperties } from "./constants";
-import type { GenericConfig } from "./config";
+import type { GenericConfig, RivelInternalConfig } from "./config";
 import type { StyleKeys, RVProperties } from "./types";
 import { toKebabCase } from "./utils";
 
@@ -159,16 +159,9 @@ const buildClassName = (
 	const hashedKey = hashString(key, 4);
 	const hashedValue = hashString(value.toString(), 4);
 
-	if (hashedBreakpoint && hashedSelector) {
-		return `_${hashedBreakpoint}-${hashedSelector}-${hashedKey}-${hashedValue}`;
-	}
-	if (hashedBreakpoint) {
-		return `_${hashedBreakpoint}-${hashedKey}-${hashedValue}`;
-	}
-	if (hashedSelector) {
-		return `_${hashedSelector}-${hashedKey}-${hashedValue}`;
-	}
-	return `_${hashedKey}-${hashedValue}`;
+	return `_${[hashedBreakpoint, hashedSelector, hashedKey, hashedValue]
+		.filter(Boolean)
+		.join("-")}`;
 };
 
 const updateStyleSheet = (
@@ -178,8 +171,6 @@ const updateStyleSheet = (
 	config: GenericConfig,
 	special?: SpecialArgs
 ) => {
-	const realKey = handleShorthands(styleKey, config.shorthands);
-
 	if (styleCache.has(className)) {
 		const cached = styleCache.get(className);
 		if (cached) {
@@ -187,6 +178,8 @@ const updateStyleSheet = (
 		}
 		return;
 	}
+
+	const realKey = handleShorthands(styleKey, config);
 
 	const styleElement = document.querySelector(
 		"style[data-rivel]"
@@ -323,6 +316,8 @@ export const removeClasses = (classes: string[]) => {
 		"style[data-rivel]"
 	) as HTMLStyleElement;
 
+	if (!styleElement.sheet) throw new Error("Style element is not valid");
+
 	for (const className of classes) {
 		const cached = styleCache.get(className);
 		if (!cached)
@@ -341,7 +336,8 @@ export const removeClasses = (classes: string[]) => {
 			styleCache.delete(className);
 			continue;
 		}
-		const ruleIndex = Array.from(styleElement.sheet?.cssRules || []).indexOf(
+
+		const ruleIndex = Array.from(styleElement.sheet.cssRules).indexOf(
 			cached.rule as CSSRule
 		);
 		styleElement.sheet?.deleteRule(ruleIndex);
@@ -367,10 +363,8 @@ export const generateStyleSheets = (config: GenericConfig) => {
 	}
 };
 
-const handleShorthands = (
-	styleKey: string,
-	shorthands: Record<string, unknown> | undefined
-) => {
+const handleShorthands = (styleKey: string, config: RivelInternalConfig) => {
+	const { shorthands } = config;
 	if (!shorthands || !(styleKey in (shorthands as Record<string, unknown>)))
 		return styleKey;
 	return shorthands[styleKey as keyof typeof shorthands] as string | string[];
