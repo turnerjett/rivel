@@ -289,3 +289,17 @@ test("raw css", () => {
 	setStyles({ $raw: [] });
 	expect(styleCache.size).toBe(0);
 });
+
+test("raw css error", () => {
+	expect(() =>
+		render(() => (
+			<div
+				use:rv={{
+					$raw: "& { background-color: red; }; &:hover { background-color: blue; }",
+				}}
+			/>
+		))
+	).toThrow(
+		"Raw value strings should only contain a single rule. Use an array of strings instead."
+	);
+});

@@ -1,5 +1,4 @@
-import { createConfig } from "@rivel/core";
-import { defaultConfig } from "@rivel/config";
+import { createConfig, defaultConfig } from "rivel";
 
 export const config = createConfig(defaultConfig);
 

@@ -1,5 +1,5 @@
 {
 	"extends": "@rivel/typescript-config/rivel.json",
-	"include": ["src", "rivel.config.ts"],
+	"include": ["src"],
 	"exclude": ["node_modules"]
 }

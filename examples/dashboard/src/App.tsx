@@ -1,13 +1,7 @@
-import {
-	RivelProvider,
-	type SchemeName,
-	Theme,
-	type ThemeName,
-} from "@rivel/core";
+import { RivelProvider, type SchemeName, Theme, type ThemeName } from "rivel";
+import { rv, values, invert } from "rivel";
 import { config } from "../rivel.config";
 import { Button } from "./components/button";
-import { invert } from "@rivel/utils";
-import { rv, values } from "@rivel/core";
 import { createSignal } from "solid-js";
 
 export default function App() {

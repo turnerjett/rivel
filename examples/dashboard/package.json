@@ -9,12 +9,14 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
+		"rivel": "*",
 		"@rivel/core": "*",
 		"@rivel/utils": "*",
 		"solid-js": "^1.8.17"
 	},
 	"devDependencies": {
 		"@rivel/config": "*",
+		"@rivel/plugin": "*",
 		"@rivel/typescript-config": "*",
 		"typescript": "^5.2.2",
 		"vite": "^5.3.1",

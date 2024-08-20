@@ -1,6 +1,5 @@
-import { Theme } from "@rivel/core";
+import { rv, values, Theme } from "rivel";
 import type { Component, ComponentProps } from "solid-js";
-import { rv, values } from "@rivel/core";
 
 export const Button: Component<ComponentProps<"button">> = (props) => {
 	const borderWidth = 1;
@@ -61,7 +60,6 @@ export const Button: Component<ComponentProps<"button">> = (props) => {
 						},
 					},
 					$dynamic: ({ mouse }) => {
-						console.log(mouse.local.pos);
 						return {
 							"--mouse-x": mouse.local.pos?.x,
 							"--mouse-y": mouse.local.pos?.y,

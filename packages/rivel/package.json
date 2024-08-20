@@ -1,0 +1,19 @@
+{
+	"name": "rivel",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"devDependencies": {
+		"@rivel/typescript-config": "*",
+		"vite": "^5.3.4"
+	},
+	"peerDependencies": {
+		"typescript": "^5.0.0"
+	},
+	"dependencies": {
+		"@rivel/core": "*",
+		"@rivel/utils": "*",
+		"@rivel/config": "*",
+		"solid-js": "^1.8.18"
+	}
+}
