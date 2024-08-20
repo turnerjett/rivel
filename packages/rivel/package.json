@@ -1,19 +1,32 @@
 {
-	"name": "rivel",
-	"exports": {
-		".": "./src/index.ts"
-	},
-	"devDependencies": {
-		"@rivel/typescript-config": "*",
-		"vite": "^5.3.4"
-	},
-	"peerDependencies": {
-		"typescript": "^5.0.0"
-	},
-	"dependencies": {
-		"@rivel/core": "*",
-		"@rivel/utils": "*",
-		"@rivel/config": "*",
-		"solid-js": "^1.8.18"
-	}
+  "name": "rivel",
+  "version": "0.1.1",
+  "main": "./dist/index.umd.js",
+  "module": "./dist/index.es.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+        "import": "./dist/index.es.js",
+        "require": "./dist/index.umd.js",
+        "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "vite build"
+  },
+  "devDependencies": {
+    "@rivel/typescript-config": "*",
+    "vite": "^5.3.4",
+    "vite-plugin-dts": "^4.0.3"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@rivel/core": "*",
+    "@rivel/utils": "*",
+    "@rivel/config": "*",
+    "solid-js": "^1.8.18"
+  }
 }

@@ -1,10 +1,10 @@
 {
 	"name": "@rivel/core",
-	"exports": {
-		".": "./src/index.ts"
-	},
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
 	"scripts": {
-		"test": "vitest"
+		"test": "vitest",
+		"build": "tsc"
 	},
 	"devDependencies": {
 		"@rivel/config": "*",
